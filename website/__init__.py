@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from os import path
 from flask_login import LoginManager
 import os
 
@@ -10,8 +9,11 @@ DB_NAME = "instance/database.db"
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'sad2wqyt3'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.abspath(DB_NAME)}'
+
+    # Load configuration from environment variables (via config.py)
+    from config import Config
+    app.config.from_object(Config)
+
     db.init_app(app)
 
     from .views import views
@@ -44,11 +46,19 @@ def create_app():
 
 
 def create_database(app):
-    db_dir = os.path.dirname(os.path.abspath(DB_NAME))
-    if db_dir and not os.path.exists(db_dir):
-        os.makedirs(db_dir)
+    """Create database tables if they don't already exist.
+    Works for both SQLite (local dev) and PostgreSQL (production).
+    """
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
 
-    if not os.path.exists(os.path.abspath(DB_NAME)):
-        with app.app_context():
-            db.create_all()
-            print('Database created!')
+    # For SQLite only: ensure the instance/ directory exists
+    if db_uri.startswith('sqlite'):
+        db_dir = os.path.dirname(os.path.abspath(DB_NAME))
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+
+    # Always create tables (safe – only creates missing tables, never drops existing ones)
+    with app.app_context():
+        db.create_all()
+        print('Database tables verified/created.')
+

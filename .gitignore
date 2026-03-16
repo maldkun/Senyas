@@ -10,9 +10,12 @@ env/
 # Editor settings
 .vscode/
 
-# Database / instance files
+# Database / instance files (SQLite local only)
 instance/
+
+# Environment secrets – NEVER commit this
+.env
 
 # OS junk
 .DS_Store
-Thumbs.db
+Thumbs.db
