@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Senyas - Master Filipino Sign Language{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar-custom">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <img src="{{ url_for('static', filename='images/senyas_logo.png') }}" alt="Senyas Logo"
+                    style="height: 70px; margin-right: 5px;">
+                Senyas
+            </a>
+
+            <div class="nav-links">
+                <a href="/" class="nav-link-item">About</a>
+            </div>
+
+            <div class="nav-auth">
+                <a href="{{ url_for('auth.login') }}" class="btn-login">Login</a>
+                <a href="{{ url_for('auth.sign_up') }}" class="btn-signup">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+            {{ message }}
+            <button type="button" class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <h1 class="hero-headline">
+            Choose a Module and <br>
+            <span class="hero-highlight">Start Practicing</span>
+        </h1>
+        <p class="hero-subtext">
+            An interactive way to master Filipino Sign Language. Pick your focus area and improve your skills with our
+            guided practice modules.
+        </p>
+    </header>
+
+    <!-- Module Cards Grid -->
+    <section class="modules-section">
+        <div class="cards-grid">
+            <!-- Alphabet -->
+            <div class="info-card">
+                <div class="icon-box icon-blue">
+                    <span style="font-weight: bold; font-size: 20px;">ABC</span>
+                </div>
+                <h3 class="card-title">Alphabet</h3>
+                <p class="card-desc">Master finger-spelling and basic hand shapes.</p>
+            </div>
+
+            <!-- Greetings -->
+            <div class="info-card">
+                <div class="icon-box icon-cyan">
+                    <i class="fas fa-hand-sparkles"></i>
+                </div>
+                <h3 class="card-title">Greetings</h3>
+                <p class="card-desc">Learn common phrases for daily interaction.</p>
+            </div>
+
+            <!-- Family -->
+            <div class="info-card">
+                <div class="icon-box icon-pink">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="card-title">Family</h3>
+                <p class="card-desc">Signs for family members and relationships.</p>
+            </div>
+
+            <!-- Food & Dining -->
+            <div class="info-card">
+                <div class="icon-box icon-blue">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h3 class="card-title">Food & Dining</h3>
+                <p class="card-desc">Essential signs for ordering and eating out.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits-section">
+        <div class="section-header">
+            <h2 class="section-headline">Why Practice With Us?</h2>
+            <p>Our platform focuses on practical application to help you communicate effectively in real-world
+                scenarios.</p>
+        </div>
+
+        <div class="benefits-grid">
+            <!-- Active Recall -->
+            <div class="benefit-card">
+                <div class="icon-box icon-blue">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="card-title">Active Recall</h3>
+                <p class="card-desc">Interactive modules designed to test your memory and refine your gestures.</p>
+            </div>
+
+            <!-- Flexible Practice -->
+            <div class="benefit-card">
+                <div class="icon-box icon-cyan">
+                    <i class="far fa-clock"></i>
+                </div>
+                <h3 class="card-title">Flexible Practice</h3>
+                <p class="card-desc">Study anytime, anywhere with our self-paced modules and offline access.</p>
+            </div>
+
+            <!-- Track Progress -->
+            <div class="benefit-card">
+                <div class="icon-box icon-rose">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3 class="card-title">Track Progress</h3>
+                <p class="card-desc">Earn badges and track your proficiency levels as you complete more modules.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <div class="cta-wrapper">
+        <div class="cta-box">
+            <h2 class="cta-headline">Ready to start practicing?</h2>
+            <p class="cta-subtext">Create an account to save your progress and access our full library of interactive
+                FSL modules.</p>
+            <a href="{{ url_for('auth.sign_up') }}" class="btn-cta">Create Free Account</a>
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="/" class="brand-logo">
+                    <img src="{{ url_for('static', filename='images/senyas_logo.png') }}" alt="Senyas Logo"
+                        style="height: 50px; margin-right: 10px;">
+                    Senyas
+                </a>
+                <p class="text-secondary">The leading platform for learning Filipino Sign Language online. Accessible,
+                    professional, and community-driven.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Learning</h4>
+                <ul class="footer-menu">
+                    <li><a href="#">Module Library</a></li>
+                    <li><a href="#">Learning Paths</a></li>
+                    <li><a href="#">FSL Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

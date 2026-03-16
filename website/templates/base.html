@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        crossorigin="anonymous" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <title>{% block title %}Home{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <a class="brand-logo" href="/">
+            <img src="{{ url_for('static', filename='images/senyas_logo.png') }}" alt="Senyas Logo"
+                style="height: 70px; margin-right: 5px;">
+            Senyas
+        </a>
+
+        <div class="nav flex-column">
+            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                <i class="fas fa-home fa-fw"></i> Home
+            </a>
+            <a class="nav-link {% if request.path == '/progress' %}active{% endif %}" href="/progress">
+                <i class="fas fa-chart-line fa-fw"></i> Progress
+            </a>
+            <a class="nav-link {% if request.path == '/leaderboard' %}active{% endif %}" href="/leaderboard">
+                <i class="fas fa-chart-bar fa-fw"></i> Leaderboard
+            </a>
+            <a class="nav-link {% if request.path == '/achievements' %}active{% endif %}" href="/achievements">
+                <i class="fas fa-trophy fa-fw"></i> Achievements
+            </a>
+            <a class="nav-link {% if request.path == '/friends' %}active{% endif %}" href="/friends">
+                <i class="fas fa-user-friends fa-fw"></i> Friends
+            </a>
+
+            <div class="nav-section-label">Preferences</div>
+
+            <a class="nav-link {% if request.path == '/settings' %}active{% endif %}" href="/settings">
+                <i class="fas fa-cog fa-fw"></i> Settings
+            </a>
+            <a class="nav-link {% if request.path == '/feedback' %}active{% endif %}" href="/feedback">
+                <i class="fas fa-comment-alt fa-fw"></i> Feedback
+            </a>
+        </div>
+
+        <a href="/logout" class="btn btn-signout">
+            <i class="fas fa-sign-out-alt"></i> Sign Out
+        </a>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='index.js') }}"></script>
+
+    <!-- ================================================================
+         GLOBAL GAMIFICATION NOTIFICATIONS
+         Call window.Gami.showExpToast(exp, bonuses)
+              window.Gami.showLevelUp(levelData)
+              window.Gami.showAchievements(achievements)
+    ================================================================ -->
+    <style>
+    {% include "gamification_ui.html" %}
+</body>
+
+</html>

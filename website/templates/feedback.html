@@ -1,0 +1,30 @@
+{% extends "base.html" %} {% block title %}Feedback{% endblock %}
+
+{% block content %}
+<h1 align="center">Feedback</h1>
+
+<form method="POST">
+    <textarea class="form-control" name="feedback" rows="10" placeholder="Enter your feedback here..."></textarea>
+    <br />
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+    </div>
+</form>
+
+<div id="feedback-list">
+    {% for item in feedbacks %}
+    <div class="feedback-item">
+        <p><strong>{{ item.user.first_name }}</strong></p>
+        <p>{{ item.data }}</p>
+        <p>{{ item.date }}</p>
+        {% if item.user_id == current_user.id %}
+        <a href="{{ url_for('views.delete_feedback', id=item.id) }}" class="btn btn-sm btn-danger"
+            onclick="return confirm('Are you sure?')">Delete</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script src="{{ url_for('static', filename='index.js') }}"></script>
+
+{% endblock %}

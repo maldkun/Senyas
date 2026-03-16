@@ -1,0 +1,311 @@
+:root {
+    /* Color Palette */
+    --primary-blue: #1E40AF;
+    --primary-blue-hover: #15328e;
+    --accent-yellow: #FFC107;
+    --accent-yellow-light: #FEF3C7;
+    --success-green: #10B981;
+    --bg-light: #F8F9FA;
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --sidebar-bg: #1F2937;
+
+    /* Layout */
+    --sidebar-width: 250px;
+
+    /* Shadows & Radius */
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --card-shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 16px;
+    --btn-radius: 8px;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+    text-decoration: none;
+}
+
+.brand-logo:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--btn-radius);
+    transition: all var(--transition-speed);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background-color: var(--primary-blue);
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nav-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+}
+
+.nav-section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    margin: 1.5rem 0 0.5rem 1rem;
+    font-weight: 600;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--white);
+    box-shadow: var(--card-shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    border-radius: var(--btn-radius);
+    padding: 0.6rem 1.5rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
+}
+
+.btn-signout {
+    background-color: #EF4444;
+    border: none;
+    color: white;
+    width: 100%;
+    margin-top: auto;
+    border-radius: var(--btn-radius);
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background var(--transition-speed);
+}
+
+.btn-signout:hover {
+    background-color: #DC2626;
+    color: white;
+    text-decoration: none;
+}
+
+
+/* Custom Components */
+.user-badge-header {
+    background: white;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-avatar-circle {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-yellow);
+    color: var(--text-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.quest-item {
+    display: flex;
+    align-items: center;
+    /* Vertically center items */
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    background-color: var(--bg-light);
+    margin-bottom: 0.75rem;
+}
+
+.quest-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.quest-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.quest-check.completed {
+    background: var(--success-green);
+    border-color: var(--success-green);
+    color: white;
+}
+
+.xp-badge {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--success-green);
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--bg-light);
+}
+
+.leaderboard-rank {
+    width: 30px;
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+.leaderboard-user {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.leaderboard-item.me {
+    background-color: var(--accent-yellow-light);
+    margin: 0 -1.25rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--btn-radius);
+    border-bottom: none;
+}
+
+.unit-card {
+    border: 1px solid #E5E7EB;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    height: 100%;
+}
+
+.unit-card.current {
+    border: 2px solid var(--primary-blue);
+    background-color: white;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 4px;
+    float: right;
+}
+
+.status-badge.completed {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.status-badge.current {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+.status-badge.locked {
+    background-color: #F3F4F6;
+    color: #6B7280;
+}
+
+/* Feature Card Gradients */
+.card-gradient-blue {
+    background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+    color: white;
+}

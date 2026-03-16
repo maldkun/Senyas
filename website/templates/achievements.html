@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Achievements{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">🏆 Achievements</h1>
+      <p class="text-muted mb-0">Track your progress and unlock rewards</p>
+    </div>
+    <div id="achSummaryBadge" class="text-right">
+      <div class="h4 font-weight-bold text-primary mb-0" id="achCount">—</div>
+      <small class="text-muted">Unlocked</small>
+    </div>
+  </div>
+
+  <!-- Progress bar / summary -->
+  <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg,#1E40AF,#3B82F6); color:#fff;">
+    <div class="card-body py-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="font-weight-bold" id="achProgressText">Loading...</span>
+        <span id="achPercent" class="small">0%</span>
+      </div>
+      <div class="progress" style="height:12px; background:rgba(255,255,255,0.25); border-radius:6px;">
+        <div id="achProgressBar" class="progress-bar" role="progressbar"
+             style="width:0%; background:#fff; border-radius:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category filter -->
+  <div class="mb-4 d-flex flex-wrap" id="categoryFilter" style="gap:8px;">
+    <button class="btn btn-primary btn-sm px-3 filter-btn active" data-cat="all">All</button>
+    <button class="btn btn-outline-primary btn-sm px-3 filter-btn" data-cat="performance">⚡ Performance</button>
+    <button class="btn btn-outline-primary btn-sm px-3 filter-btn" data-cat="engagement">📖 Engagement</button>
+    <button class="btn btn-outline-primary btn-sm px-3 filter-btn" data-cat="streak">🔥 Streak</button>
+    <button class="btn btn-outline-primary btn-sm px-3 filter-btn" data-cat="mode">🤖 Modes</button>
+    <button class="btn btn-outline-primary btn-sm px-3 filter-btn" data-cat="hidden">🔮 Hidden</button>
+  </div>
+
+  <!-- Achievement grid -->
+  <div class="row" id="achievementGrid">
+    <!-- populated by JS -->
+    <div class="col-12 text-center py-5" id="loadingState">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-3 text-muted">Loading achievements...</p>
+    </div>
+  </div>
+</div>
+
+<style>
+.ach-card {
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  background: #fff;
+  height: 100%;
+}
+.ach-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+.ach-card.unlocked { border-color: #1E40AF; }
+.ach-card.locked { opacity: 0.65; }
+.ach-badge-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin: 0 auto 12px;
+  background: #f0f0f0;
+}
+.unlocked .ach-badge-circle { background: linear-gradient(135deg,#1E40AF22,#3B82F622); }
+.ach-name { font-weight: 700; font-size: 0.95rem; }
+.ach-desc { font-size: 0.82rem; color: #6c757d; }
+.ach-exp-pill {
+  display: inline-block; background: #1E40AF; color: #fff;
+  border-radius: 20px; font-size: 0.75rem; padding: 2px 10px; font-weight: 600;
+}
+.unlocked-date { font-size: 0.72rem; color: #10B981; margin-top: 4px; }
+.filter-btn.active { background: #1E40AF; border-color: #1E40AF; color: #fff; }
+.filter-btn:not(.active) { border-color: #1E40AF; color: #1E40AF; }
+.filter-btn:not(.active):hover { background: #1E40AF; color: #fff; }
+</style>
+
+<script>
+let allAchievements = [];
+let currentFilter = 'all';
+
+async function loadAchievements() {
+  try {
+    const res = await fetch('/api/gamification/achievements');
+    const data = await res.json();
+    allAchievements = data.achievements || [];
+
+    const total   = data.total_count || 0;
+    const unlocked = data.unlocked_count || 0;
+    const pct = total > 0 ? Math.round(unlocked / total * 100) : 0;
+
+    document.getElementById('achCount').textContent = `${unlocked}/${total}`;
+    document.getElementById('achProgressText').textContent = `${unlocked} of ${total} achievements unlocked`;
+    document.getElementById('achPercent').textContent = `${pct}%`;
+    document.getElementById('achProgressBar').style.width = pct + '%';
+
+    renderGrid(currentFilter);
+  } catch(e) {
+    document.getElementById('loadingState').innerHTML =
+      '<p class="text-danger">Could not load achievements.</p>';
+  }
+}
+
+function renderGrid(cat) {
+  const grid = document.getElementById('achievementGrid');
+  const filtered = cat === 'all'
+    ? allAchievements
+    : allAchievements.filter(a => a.category === cat);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">No achievements in this category.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(a => {
+    const isHiddenLocked = a.is_hidden && !a.is_unlocked;
+    const badge  = isHiddenLocked ? '🔒' : (a.is_unlocked ? a.badge_icon : '🔒');
+    const name   = isHiddenLocked ? '???' : a.name;
+    const desc   = isHiddenLocked ? 'Hidden achievement — keep playing to discover!' : a.description;
+    const unlockDate = a.is_unlocked && a.unlocked_at
+      ? `<div class="unlocked-date">✅ Unlocked ${new Date(a.unlocked_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>`
+      : '';
+
+    return `
+      <div class="col-md-4 col-sm-6 mb-4">
+        <div class="ach-card p-3 ${a.is_unlocked ? 'unlocked' : 'locked'}">
+          <div class="ach-badge-circle">${badge}</div>
+          <div class="text-center">
+            <div class="ach-name mb-1">${name}</div>
+            <div class="ach-desc mb-2">${desc}</div>
+            <span class="ach-exp-pill">+${a.exp_reward} EXP</span>
+            ${unlockDate}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Category filter buttons
+document.getElementById('categoryFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.cat;
+  renderGrid(currentFilter);
+});
+
+loadAchievements();
+</script>
+{% endblock %}

@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <title>Dynamic Practice - {{ course.title() }}</title>
+    <style>
+        :root {
+            --primary-blue: #1E40AF;
+            --primary-blue-hover: #15328e;
+            --light-blue: #5B7CFF;
+            --success-green: #10B981;
+            --error-red: #EF4444;
+            --warning-yellow: #F59E0B;
+            --bg-color: #F5F5F5;
+            --text-primary: #0F1419;
+            --text-secondary: #6B7280;
+            --white: #FFFFFF;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(79, 111, 255, 0.2);
+            /* Dark Mode Variables (Default Light) */
+            --card-locked-bg: #E8E8E8;
+            --progress-empty: #D1D5DB;
+            --info-box-bg: #E8F4F8;
+            --dashed-border: #D1D5DB;
+            --illustration-placeholder: #F9FAFB;
+        }
+
+        /* Dark Mode overrides via class on body */
+        body.dark-mode {
+            --bg-color: #15202B;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --card-locked-bg: #2C3640;
+            --white: #1E2732;
+            --progress-empty: #374151;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+            --info-box-bg: #2C3640;
+            --dashed-border: #4B5563;
+            --illustration-placeholder: #1F2937;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .container-dynamic {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .btn-back {
+            background: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        .dark-mode-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--white);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Session Start Screen */
+        .start-screen {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            max-width: 700px;
+            margin: 60px auto;
+        }
+
+        .start-screen h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 16px;
+        }
+
+        .start-screen p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .param-card {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .param-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .param-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .btn-start {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(79, 111, 255, 0.3);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-start:hover {
+            background: #4060E8;
+            transform: scale(1.02);
+        }
+
+        /* Study Phase Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .study-modal {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .study-modal h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .study-sign-display {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .study-sign-display img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .countdown-timer {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin: 20px 0;
+        }
+
+        .countdown-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .countdown-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--light-blue));
+            transition: width 0.3s linear;
+        }
+
+        .btn-continue {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-continue:hover {
+            background: var(--primary-blue-hover);
+        }
+
+        /* Performance Phase */
+        .performance-container {
+            display: none;
+        }
+
+        .practice-header {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .practice-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .progress-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .main-practice-area {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .camera-container {
+            border-radius: 12px;
+            overflow: hidden;
+            background: black;
+            margin-bottom: 24px;
+        }
+
+        .camera-container canvas {
+            width: 100%;
+            display: block;
+        }
+
+        .detection-feedback {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detection-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .status-icon.red {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-red);
+        }
+
+        .status-icon.yellow {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-yellow);
+        }
+
+        .status-icon.green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+
+        .confidence-meter {
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-green), var(--light-blue));
+            transition: width 0.3s ease;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-validate {
+            flex: 1;
+            background: var(--success-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-validate:hover {
+            background: #059669;
+        }
+
+        .btn-show-sign {
+            flex: 1;
+            background: var(--white);
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            border-radius: 10px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-show-sign:hover {
+            background: rgba(79, 111, 255, 0.05);
+        }
+
+        /* Feedback Modals */
+        .feedback-modal {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .feedback-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-icon.success {
+            color: var(--success-green);
+        }
+
+        .feedback-icon.error {
+            color: var(--error-red);
+        }
+
+        .feedback-icon.warning {
+            color: var(--warning-yellow);
+        }
+
+        .feedback-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .feedback-details {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .btn-feedback {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 4px;
+        }
+
+        .btn-feedback.secondary {
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        /* Session Complete */
+        .complete-screen {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            max-width: 700px;
+            margin: 60px auto;
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Transition Phase */
+        .transition-screen {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            max-width: 700px;
+            margin: 60px auto;
+            display: none;
+        }
+
+        .transition-timer {
+            font-size: 80px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin: 30px 0;
+            font-family: monospace;
+        }
+
+        .studied-signs-list {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .studied-sign-badge {
+            background: var(--bg-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        /* Batch Summary */
+        .batch-summary {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 40px auto;
+            display: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-sign {
+            font-size: 24px;
+            font-weight: 700;
+            width: 40px;
+        }
+
+        .result-status {
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .result-score {
+            font-weight: 600;
+        }
+
+        /* Gamification panel in batch summary */
+        .batch-gami-panel {
+            margin-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 18px;
+        }
+        .batch-exp-badge {
+            background: var(--primary-blue);
+            color: #fff;
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .batch-ach-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .batch-ach-chip {
+            background: #FEF3C7;
+            border: 1px solid #FFC107;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #92400e;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Header Styles from Static Difficulty */
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .difficulty-highlight {
+            color: var(--primary-blue);
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .btn-skip-primary {
+            background: var(--primary-blue);
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-skip-primary:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-dynamic">
+        <!-- Top Nav -->
+        <nav class="top-nav">
+            <a href="/" class="btn-back">
+                <i class="fa fa-arrow-left"></i> Back to Home
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle Dark Mode">
+                <i class="fa fa-moon-o"></i>
+            </button>
+        </nav>
+
+        <!-- Header -->
+        <header class="page-header">
+            <h1 class="page-title">Alphabets: <span class="difficulty-highlight">Dynamic Practice</span></h1>
+            <p class="page-subtitle">Structured Filipino
+                Sign Language course with real-time AI validation</p>
+        </header>
+
+        <!-- Session Start Screen -->
+        <div id="startScreen" class="start-screen">
+            <h1>🎯 Dynamic Practice: {{ course.title() }}
+            </h1>
+            <p>Adaptive learning that adjusts to your performance in real-time</p>
+
+            <div class="param-grid">
+                <div class="param-card">
+                    <div class="param-label">Signs</div>
+                    <div class="param-value">15</div>
+                </div>
+                <div class="param-card">
+                    <div class="param-label">Study Time</div>
+                    <div class="param-value" id="displayStudyTime">5s</div>
+                </div>
+                <div class="param-card">
+                    <div class="param-label">Threshold</div>
+                    <div class="param-value" id="displayThreshold">70%</div>
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="startSession()">
+                <i class="fa fa-play"></i> Start Practice
+            </button>
+
+            <button class="btn-start" style="background: #6B7280; margin-top: 10px;" onclick="showProgressModal()">
+                <i class="fa fa-bar-chart"></i> View Progress
+            </button>
+        </div>
+
+        <!-- Progress Modal -->
+        <div id="progressModal" class="modal-overlay" style="display:none;">
+            <div class="study-modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Your Progress</h3>
+                    <button onclick="closeProgressModal()"
+                        style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                </div>
+
+                <div id="progressContent">
+                    <p style="color: var(--text-secondary);">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Study Modal -->
+        <div id="studyModal" class="modal-overlay">
+            <div class="study-modal">
+                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">
+                    BATCH STUDY <span id="studyBatchNum">1</span>
+                </div>
+                <h2>Memorize: <span id="studySignChar" style="color: var(--primary-blue); font-size: 1.2em;">-</span>
+                </h2>
+                <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                    Sign <span id="studySignIndex">1</span> of <span id="studyBatchSize">3</span>
+                </div>
+
+                <div class="study-sign-display">
+                    <img id="studySignImage" src="" alt="Sign">
+                </div>
+
+                <div class="countdown-timer" id="countdownTimer">5</div>
+                <div class="countdown-bar">
+                    <div class="countdown-fill" id="countdownFill" style="width: 100%"></div>
+                </div>
+
+                <div id="studyNextSignPreview" style="font-size: 12px; color: #888; margin-top: 10px;">
+                    Next: <span id="nextSignChar">...</span>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn-continue" onclick="forceNextStudy()">Next Sign &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transition Phase -->
+        <div id="transitionScreen" class="transition-screen">
+            <h2>Study Complete!</h2>
+            <p>You studied these signs:</p>
+            <div class="studied-signs-list" id="studiedSignsList">
+                <!-- Injected via JS -->
+            </div>
+
+            <div style="margin-top: 40px;">
+                <p style="font-size: 18px; font-weight: 500;">Get ready to perform in RANDOM order...</p>
+                <div class="transition-timer" id="transitionTimer">5</div>
+            </div>
+        </div>
+
+        <!-- Batch Summary Screen -->
+        <div id="batchSummaryScreen" class="batch-summary">
+            <h2 style="text-align: center; margin-bottom: 30px;">Batch <span id="summaryBatchNum">1</span> Complete!</h2>
+
+            <div id="batchResultsList"><!-- injected by JS --></div>
+
+            <!-- EXP + Achievements earned this batch -->
+            <div class="batch-gami-panel" id="batchGamiPanel" style="display:none;">
+                <div style="text-align:center; margin-bottom:8px;">
+                    <span class="batch-exp-badge">&#11088; +<span id="batchExpTotal">0</span> EXP</span>
+                </div>
+                <div id="batchBonusList" style="text-align:center;font-size:0.8rem;color:#6b7280;margin-bottom:6px;"></div>
+                <div id="batchAchList" class="batch-ach-list"></div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">
+                    Score: <span id="batchScoreText">2/3</span>
+                </div>
+                <button class="btn-start" onclick="nextBatch()">
+                    Next Batch <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Performance Phase -->
+        <div id="performanceContainer" class="performance-container">
+            <div class="row">
+                <!-- Left Column: Controls & Feedback -->
+                <div class="col-lg-5 mb-4 mb-lg-0 d-flex flex-column justify-content-center">
+                    <div class="practice-card"
+                        style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #F3F4F6;">
+                        <div class="practice-header-compact"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2 style="font-size: 1.5rem; margin: 0; color: #111827;">Sign: <span id="currentSign"
+                                    style="color: #4F6FFF; font-weight: 800;">-</span></h2>
+                            <div class="progress-badge" id="progressBadge" style="font-size: 0.9rem;">0 / 15</div>
+                        </div>
+
+                        <div class="detection-feedback" style="margin-bottom: 2rem;">
+                            <div class="detection-status">
+                                <div class="status-icon red" id="statusIcon">
+                                    <i class="fa fa-hand-paper-o"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 16px;" id="statusText">Position your hand
+                                    </div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);" id="statusSubtext">Show
+                                        the sign to the camera</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                    <span>Confidence</span>
+                                    <span id="confidenceText">0%</span>
+                                </div>
+                                <div class="confidence-meter">
+                                    <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                    Required: <span id="requiredThreshold">70</span>%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons-grid" style="display: none;">
+                            <!-- Buttons removed as requested -->
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button class="btn-skip-primary" onclick="skipSign()">
+                                <i class="fa fa-forward"></i> Skip This Sign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Camera -->
+                <div class="col-lg-7 d-flex flex-column justify-content-center">
+                    <div class="camera-container"
+                        style="width: 100%; aspect-ratio: 4/3; background: black; border-radius: 16px; overflow: hidden; position: relative;">
+                        <video id="practiceVideo" autoplay playsinline muted style="display: none;"></video>
+                        <canvas id="practiceCanvas"
+                            style="width: 100%; height: 100%; display: block; object-fit: cover;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Modals -->
+        <div id="feedbackModal" class="modal-overlay">
+            <div class="feedback-modal" id="feedbackContent">
+                <!-- Content injected by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Session Complete Screen -->
+        <div id="completeScreen" class="complete-screen">
+            <div class="feedback-icon success">
+                <i class="fa fa-trophy"></i>
+            </div>
+            <h1>Session Complete!</h1>
+            <p>Great work! Here's your performance summary:</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Signs Practiced</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statCorrect">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRate">0%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+
+            <!-- Detailed Batch Results -->
+            <div
+                style="margin-top: 20px; text-align: left; max-height: 300px; overflow-y: auto; background: #F9FAFB; padding: 15px; border-radius: 8px;">
+                <h5 style="margin-bottom: 10px; color: var(--text-primary);">Session Details</h5>
+                <div id="sessionRecap">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button class="btn-start" onclick="location.reload()">
+                    <i class="fa fa-repeat"></i> Practice Again
+                </button>
+                <a href="/progress" class="btn-start"
+                    style="background: var(--bg-color); color: var(--text-primary); margin-left: 12px; text-decoration: none; display: inline-block;">
+                    <i class="fa fa-home"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='fsl_module.js') }}"></script>
+
+    <script>
+        // Session state
+        let session = {
+            id: null,
+            course: '{{ course }}',
+            batches: [], // Array of { study: [], performance: [] }
+            currentBatchIndex: 0,
+            batchSize: 3,
+
+            // Current state within batch
+            phase: 'start', // start, study, transition, performance, summary, complete
+            subIndex: 0, // index within the current phase (e.g. 2nd sign of batch)
+
+            studyTime: 5,
+            threshold: 70,
+
+            // Overall stats
+            totalAttempts: 0,
+            totalCorrect: 0,
+
+            // Batch specific results
+            currentBatchResults: [],
+
+            // Batch gamification accumulators (reset each batch)
+            currentBatchExpEarned: 0,
+            currentBatchBonuses: [],
+            currentBatchAchievements: [],
+
+            // Validation lock
+            isValidating: false,
+
+            // Adaptive History
+            performanceHistory: [],
+            retriedSigns: new Set(),
+            remedialQueue: [] // Signs to repeat
+        };
+
+        let fslModule = null;
+        let lastDetection = null;
+        let timerInterval = null;
+        let feedbackTimeout = null; // Track feedback transition timeout
+
+        // --- Initialization ---
+
+        async function startSession() {
+            try {
+                // 1. Create Session
+                const startResp = await fetch('/dynamic/session/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ course: session.course })
+                });
+
+                if (!startResp.ok) throw new Error("Failed to start session");
+                const sessionData = await startResp.json();
+
+                session.id = sessionData.session_id;
+                session.studyTime = sessionData.initial_study_time;
+                session.threshold = sessionData.initial_threshold;
+
+                // 2. Generate Queue & Get Batch Size
+                const queueResp = await fetch('/dynamic/queue/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        course: session.course,
+                        session_length: 15
+                    })
+                });
+
+                if (!queueResp.ok) throw new Error("Failed to generate queue");
+                const queueData = await queueResp.json();
+
+                // Set batch size from server recommendation
+                session.batchSize = queueData.batch_size || 3;
+
+                // 3. Create Batches
+                generateBatches(queueData.queue);
+
+                // UI Setup
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('displayStudyTime').textContent = session.studyTime + 's';
+                document.getElementById('displayThreshold').textContent = session.threshold + '%';
+
+                // Start first batch
+                startBatch(0);
+
+            } catch (err) {
+                console.error(err);
+                alert("Error starting session: " + err.message);
+            }
+        }
+
+        function generateBatches(queue) {
+            session.batches = [];
+            for (let i = 0; i < queue.length; i += session.batchSize) {
+                const batchSigns = queue.slice(i, i + session.batchSize);
+                session.batches.push({
+                    study: [...batchSigns], // Copy for study order
+                    performance: [], // Will be randomized later
+                    results: []
+                });
+            }
+            console.log(`Generated ${session.batches.length} batches of size ${session.batchSize}`);
+        }
+
+        // --- Batch Flow Control ---
+
+        function startBatch(batchIdx) {
+            session.currentBatchIndex = batchIdx;
+            session.subIndex = 0;
+            session.currentBatchResults = [];
+            // Reset per-batch gamification
+            session.currentBatchExpEarned = 0;
+            session.currentBatchBonuses = [];
+            session.currentBatchAchievements = [];
+
+            if (batchIdx >= session.batches.length) {
+                if (session.remedialQueue.length > 0) {
+                    // Create a remedial batch
+                    console.log("Creating remedial batch from:", session.remedialQueue);
+                    const remedialSigns = [...session.remedialQueue]; // Copy signs
+                    session.remedialQueue = []; // Clear queue
+
+                    // Create batches from remedial signs
+                    const newBatches = [];
+                    for (let i = 0; i < remedialSigns.length; i += session.batchSize) {
+                        const chunk = remedialSigns.slice(i, i + session.batchSize);
+                        newBatches.push({
+                            study: chunk,
+                            performance: [],
+                            results: []
+                        });
+                    }
+
+                    session.batches.push(...newBatches);
+                    // Continue to the next (newly created) batch
+                    startBatch(batchIdx);
+                    return;
+                } else {
+                    completeSession();
+                    return;
+                }
+            }
+
+            // Randomize performance order for this batch ONLY
+            const batch = session.batches[batchIdx];
+
+            // Do NOT cap the batch size for retries - let them extend the batch
+            // if (batch.study.length > session.batchSize) { ... }
+
+            batch.performance = shuffleArray([...batch.study]);
+            console.log(`Batch ${batchIdx}: Study=${batch.study}, Performance=${batch.performance}`);
+
+            // Start Study Phase
+            session.phase = 'study';
+            showStudyPhase();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- Study Phase ---
+
+        function showStudyPhase() {
+            const batch = session.batches[session.currentBatchIndex];
+
+            if (session.subIndex >= batch.study.length) {
+                // Done studying this batch -> Transition
+                startTransition();
+                return;
+            }
+
+            const currentSign = batch.study[session.subIndex];
+            const nextSign = (session.subIndex + 1 < batch.study.length)
+                ? batch.study[session.subIndex + 1]
+                : "Transition";
+
+            // Update UI
+            document.getElementById('studyModal').style.display = 'flex';
+            document.getElementById('studyBatchNum').textContent = `${session.currentBatchIndex + 1} / ${session.batches.length}`;
+            document.getElementById('studySignChar').textContent = currentSign;
+            document.getElementById('studySignIndex').textContent = session.subIndex + 1;
+            document.getElementById('studyBatchSize').textContent = batch.study.length;
+            document.getElementById('studySignImage').src = `/static/images/signs/${currentSign}.jpg`;
+            document.getElementById('nextSignChar').textContent = nextSign;
+
+            // Timer
+            // Check if this sign needs extra study time (e.g. was retried)
+            // Default to session time, but if it's in retriedSigns, give +3 seconds
+            let effectiveStudyTime = session.studyTime;
+            if (session.retriedSigns.has(currentSign)) {
+                effectiveStudyTime += 3;
+                // Visual cue
+                document.getElementById('displayStudyTime').textContent = `${effectiveStudyTime}s (Extra)`;
+            } else {
+                document.getElementById('displayStudyTime').textContent = `${session.studyTime}s`;
+            }
+
+            let timeLeft = effectiveStudyTime;
+            updateTimerUI(timeLeft, effectiveStudyTime);
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI(timeLeft, session.studyTime);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    forceNextStudy();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI(current, max) {
+            document.getElementById('countdownTimer').textContent = current;
+            const pct = Math.max(0, (current / max) * 100);
+            document.getElementById('countdownFill').style.width = `${pct}%`;
+        }
+
+        function forceNextStudy() {
+            if (timerInterval) clearInterval(timerInterval);
+            session.subIndex++;
+            showStudyPhase(); // Recursive-ish call to next sign or finish
+        }
+
+        // --- Transition Phase ---
+
+        function startTransition() {
+            session.phase = 'transition';
+            document.getElementById('studyModal').style.display = 'none';
+            document.getElementById('transitionScreen').style.display = 'block';
+
+            // Show what was studied
+            const batch = session.batches[session.currentBatchIndex];
+            const listContainer = document.getElementById('studiedSignsList');
+            listContainer.innerHTML = batch.study.map(s =>
+                `<div class="studied-sign-badge">${s}</div>`
+            ).join('');
+
+            // 5 second countdown
+            let timeLeft = 5;
+            document.getElementById('transitionTimer').textContent = timeLeft;
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('transitionTimer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('transitionScreen').style.display = 'none';
+                    startPerformancePhase();
+                }
+            }, 1000);
+        }
+
+        // --- Performance Phase ---
+
+        async function startPerformancePhase() {
+            session.phase = 'performance';
+            session.subIndex = 0;
+
+            // Init Camera if needed
+            if (!fslModule) {
+                fslModule = new FSLModule();
+                await fslModule.initialize(
+                    document.getElementById('practiceVideo'),
+                    document.getElementById('practiceCanvas')
+                );
+                fslModule.onPrediction = (res) => {
+                    lastDetection = res;
+                    updatePerformanceUI(res);
+                };
+                await fslModule.startCapture();
+            }
+
+            showPerformanceSign();
+        }
+
+        function showPerformanceSign() {
+            const batch = session.batches[session.currentBatchIndex];
+
+            if (session.subIndex >= batch.performance.length) {
+                // Done performing -> Summary
+                showBatchSummary();
+                return;
+            }
+
+            const targetSign = batch.performance[session.subIndex];
+
+            document.getElementById('performanceContainer').style.display = 'block';
+            document.getElementById('currentSign').textContent = targetSign;
+
+            // Update progress badge to show total progress
+            // Calculate absolute index
+            let completedSigns = 0;
+            for (let i = 0; i < session.currentBatchIndex; i++) {
+                completedSigns += session.batches[i].performance.length;
+            }
+            const absIndex = completedSigns + session.subIndex + 1;
+            const totalSigns = session.batches.reduce((acc, b) => acc + b.performance.length, 0);
+
+            document.getElementById('progressBadge').textContent = `${absIndex} / ${totalSigns}`;
+
+            // Clear previous feedback
+            // Clear previous feedback
+            session.isValidating = false;
+            resetAutoValidation();
+            updateStatusUI('red', '<i class="fa fa-hand-paper-o"></i>', 'Position your hand', 'Show the sign');
+        }
+
+        // --- Validation Logic ---
+
+        let autoValidateStartTime = null;
+        let isAutoValidating = false;
+
+        function updatePerformanceUI(result) {
+            if (session.phase !== 'performance') return;
+            if (session.isValidating) return; // Prevent double validation
+
+            if (!result || !result.sign) {
+                resetAutoValidation();
+                return;
+            }
+
+            const batch = session.batches[session.currentBatchIndex];
+            const targetSign = batch.performance[session.subIndex];
+
+            const detectedSign = result.sign.trim().toUpperCase();
+            const confidence = result.confidence ? Math.round(result.confidence * 100) : 0;
+
+            // Update Meters
+            document.getElementById('confidenceFill').style.width = `${confidence}%`;
+            document.getElementById('confidenceText').textContent = `${confidence}%`;
+
+            if (detectedSign === targetSign) {
+                if (confidence >= session.threshold) {
+                    updateStatusUI('green', '<i class="fa fa-check"></i>', 'Perfect!', 'Validating...');
+
+                    // Instant validation - no delay required
+                    if (!isAutoValidating) {
+                        isAutoValidating = true;
+                        resetAutoValidation();
+                        validateSign(true);
+                    }
+                } else {
+                    resetAutoValidation();
+                    updateStatusUI('yellow', '<i class="fa fa-exclamation-triangle"></i>', 'Correct sign, low confidence', 'Adjust hand position');
+                }
+            } else {
+                resetAutoValidation();
+                updateStatusUI('red', '<i class="fa fa-times"></i>', `Detected: ${detectedSign}`, 'Incorrect sign');
+            }
+        }
+
+        function resetAutoValidation() {
+            autoValidateStartTime = null;
+            isAutoValidating = false;
+            document.getElementById('statusIcon').style.background = '';
+        }
+
+        function updateStatusUI(color, icon, text, sub) {
+            const el = document.getElementById('statusIcon');
+            const txt = document.getElementById('statusText');
+            const subEl = document.getElementById('statusSubtext');
+
+            el.className = `status-icon ${color}`;
+            if (!isAutoValidating) {
+                el.style.background = '';
+                if (color === 'red') el.style.backgroundColor = 'rgba(239,68,68,0.1)';
+                if (color === 'yellow') el.style.backgroundColor = 'rgba(245,158,11,0.1)';
+                if (color === 'green') el.style.backgroundColor = 'rgba(16,185,129,0.1)';
+            }
+            el.innerHTML = icon;
+            txt.textContent = text;
+            subEl.textContent = sub;
+        }
+
+        async function validateSign(isAuto = false) {
+            if (!isAuto) resetAutoValidation();
+
+            // Prevent multiple calls
+            if (session.isValidating) return;
+            session.isValidating = true;
+
+            if (!lastDetection) return;
+
+            const batch = session.batches[session.currentBatchIndex];
+            const targetSign = batch.performance[session.subIndex];
+            const detectedSign = (lastDetection.sign || 'None').trim().toUpperCase();
+            const confidence = Math.round(lastDetection.confidence * 100);
+
+            // Client-side validation check
+            const isLocallyCorrect = (detectedSign === targetSign && confidence >= session.threshold);
+            const payloadDetected = isLocallyCorrect ? targetSign : detectedSign;
+
+            try {
+                // Determine Indices for DB
+                const studyIdx = batch.study.indexOf(targetSign);
+                const perfIdx = session.subIndex;
+
+                const response = await fetch('/dynamic/session/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.id,
+                        sign_id: targetSign,
+                        detected_sign: payloadDetected,
+                        confidence: confidence,
+                        threshold: session.threshold,
+                        study_time: session.studyTime,
+                        course: session.course,
+                        // Batch Fields
+                        batch_index: session.currentBatchIndex,
+                        batch_size: session.batchSize,
+                        study_time_limit: session.currentStudyTime,
+                        current_threshold: session.currentThreshold,
+                        study_order_index: studyIdx,
+                        performance_order_index: perfIdx
+                    })
+                });
+
+                // CHECKPOINT: If subIndex changed or validation was cancelled (e.g. by Skip), abort
+                if (session.subIndex !== perfIdx || !session.isValidating) {
+                    console.log(`Validation discarded: subIndex changed from ${perfIdx} to ${session.subIndex}, or validation cancelled`);
+                    session.isValidating = false; // Reset the lock so next sign can be validated
+                    return;
+                }
+
+                const result = await response.json();
+                const wasCorrect = isLocallyCorrect || result.is_correct;
+
+                // Save Result
+                session.currentBatchResults.push({
+                    sign: targetSign,
+                    correct: wasCorrect,
+                    confidence: confidence,
+                    detected: detectedSign
+                });
+
+                session.totalAttempts++;
+                if (wasCorrect) {
+                    session.totalCorrect++;
+                    session.performanceHistory.push(true);
+                } else {
+                    session.performanceHistory.push(false);
+                    // Handle Retry Logic
+                    handleSignRetry(targetSign);
+                }
+
+                // ===== GAMIFICATION: toast + accumulate for batch summary =====
+                if (result.gamification && window.Gami) {
+                    window.Gami.handleResponse(result.gamification);
+                    const g = result.gamification;
+                    session.currentBatchExpEarned += (g.sign_exp || 0);
+                    if (g.sign_bonuses && g.sign_bonuses.length)
+                        session.currentBatchBonuses.push(...g.sign_bonuses);
+                    if (g.new_achievements && g.new_achievements.length)
+                        session.currentBatchAchievements.push(...g.new_achievements);
+                }
+                // ===== END GAMIFICATION =====
+
+                // Show Feedback
+                showFeedback(wasCorrect, targetSign, detectedSign, confidence);
+
+                // Show Feedback
+                showFeedback(wasCorrect, targetSign, detectedSign, confidence);
+
+                // Note: Difficulty is now adjusted at the end of the batch
+
+
+            } catch (err) {
+                console.error("Validation error", err);
+                session.isValidating = false; // Reset on error so they can try again
+
+                // IMPORTANT: Still record this as an attempt (failed) so the batch count stays correct
+                session.currentBatchResults.push({
+                    sign: targetSign,
+                    correct: false,
+                    confidence: confidence,
+                    detected: 'ERROR (Server)'
+                });
+
+                session.totalAttempts++;
+                session.performanceHistory.push(false);
+                handleSignRetry(targetSign);
+
+                // Show error feedback
+                showFeedback(false, targetSign, 'Server Error', confidence);
+            }
+        }
+
+        function showFeedback(correct, expected, detected, conf) {
+            const modal = document.getElementById('feedbackModal');
+            const content = document.getElementById('feedbackContent');
+
+            // Clear any existing feedback timeout
+            if (feedbackTimeout) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = null;
+            }
+
+            if (correct) {
+                content.innerHTML = `
+                    <div class="feedback-icon success"><i class="fa fa-check-circle"></i></div>
+                    <div class="feedback-title">Correct!</div>
+                    <div class="feedback-details">You performed ${expected} correctly (${conf}%)</div>
+                `;
+                feedbackTimeout = setTimeout(nextPerformanceSign, 1500);
+            } else {
+                content.innerHTML = `
+                    <div class="feedback-icon error"><i class="fa fa-times-circle"></i></div>
+                    <div class="feedback-title">Incorrect</div>
+                    <div class="feedback-details">
+                        Expected: ${expected}<br>
+                        Detected: ${detected} (${conf}%)
+                    </div>
+                    <button class="btn-feedback" onclick="continuePerformance()">Continue</button>
+                    <button class="btn-feedback secondary" onclick="retryPerformance()">Try Again</button>
+                `;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function nextPerformanceSign() {
+            feedbackTimeout = null; // Clear the timeout reference
+            document.getElementById('feedbackModal').style.display = 'none';
+            session.subIndex++;
+            showPerformanceSign();
+        }
+
+        function continuePerformance() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            session.subIndex++;
+            showPerformanceSign();
+        }
+
+        function retryPerformance() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            // Don't increment index, show same sign again
+            showPerformanceSign();
+        }
+
+        async function skipSign() {
+            // Clear any pending feedback transition
+            if (feedbackTimeout) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = null;
+            }
+
+            // Mark as incorrect/skipped
+            const batch = session.batches[session.currentBatchIndex];
+            const targetSign = batch.performance[session.subIndex];
+
+            // BREAK THE LOCK if it was stuck
+            session.isValidating = false;
+            resetAutoValidation();
+
+            // Save skip to database
+            try {
+                const studyIdx = batch.study.indexOf(targetSign);
+                const perfIdx = session.subIndex;
+
+                await fetch('/dynamic/session/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.id,
+                        sign_id: targetSign,
+                        detected_sign: 'SKIPPED',
+                        confidence: 0,
+                        threshold: session.threshold,
+                        study_time: 0,
+                        course: session.course,
+                        batch_index: session.currentBatchIndex,
+                        batch_size: session.batchSize,
+                        study_time_limit: session.currentStudyTime,
+                        current_threshold: session.currentThreshold,
+                        study_order_index: studyIdx,
+                        performance_order_index: perfIdx
+                    })
+                });
+            } catch (err) {
+                console.error("Error saving skip:", err);
+            }
+
+            session.currentBatchResults.push({
+                sign: targetSign,
+                correct: false,
+                confidence: 0,
+                detected: 'SKIPPED'
+            });
+
+            session.totalAttempts++;
+            session.performanceHistory.push(false);
+
+            // Handle Retry Logic
+            handleSignRetry(targetSign);
+
+            session.subIndex++;
+            showPerformanceSign();
+        }
+
+        function handleSignRetry(sign) {
+            // Check if already retried
+            if (session.retriedSigns.has(sign)) return;
+
+            // Mark as retried
+            session.retriedSigns.add(sign);
+
+            // Find a future batch to inject into
+            // We want to inject into batches that haven't started yet
+            const futureBatchesCount = session.batches.length - 1 - session.currentBatchIndex;
+
+            if (futureBatchesCount > 0) {
+                // Pick a random future batch
+                const offset = Math.floor(Math.random() * futureBatchesCount) + 1;
+                const targetBatchIndex = session.currentBatchIndex + offset;
+                const targetBatch = session.batches[targetBatchIndex];
+
+                console.log(`Injecting retry sign ${sign} into batch ${targetBatchIndex + 1}`);
+
+                // STRICTLY 3 SIGNS PER BATCH: Replace a sign with the retry
+                // IMPORTANT: Do NOT replace a sign that is itself a retry
+                // Find an "original" sign (not in retriedSigns) to replace
+                let removedSign = null;
+                let removedIndex = -1;
+
+                for (let i = targetBatch.study.length - 1; i >= 0; i--) {
+                    const candidateSign = targetBatch.study[i];
+                    if (!session.retriedSigns.has(candidateSign)) {
+                        // This is an original sign, safe to replace
+                        removedSign = candidateSign;
+                        removedIndex = i;
+                        break;
+                    }
+                }
+
+                if (removedSign !== null) {
+                    // Remove the original sign and add the retry
+                    targetBatch.study.splice(removedIndex, 1);
+                    targetBatch.study.push(sign);
+                    console.log(`Replaced ${removedSign} with retry ${sign} in batch ${targetBatchIndex + 1}`);
+                    showToast(`Sign '${sign}' will replace '${removedSign}' in batch ${targetBatchIndex + 1}.`);
+                } else {
+                    // All signs in this batch are retries - cannot add without exceeding batch size
+                    // Maintain strict 3 signs per batch limit (15 total per session)
+                    console.log(`Cannot add retry ${sign} to batch ${targetBatchIndex + 1}: all signs are already retries. Maintaining strict batch size of 3.`);
+                }
+            } else {
+                console.log(`No future batches to inject ${sign}.`);
+            }
+        }
+
+        // --- Batch Summary ---
+
+        function showBatchSummary() {
+            session.phase = 'summary';
+            document.getElementById('performanceContainer').style.display = 'none';
+            document.getElementById('batchSummaryScreen').style.display = 'block';
+
+            document.getElementById('summaryBatchNum').textContent = session.currentBatchIndex + 1;
+
+            const resultsDiv = document.getElementById('batchResultsList');
+            let correctCount = 0;
+
+            let html = '';
+            session.currentBatchResults.forEach(res => {
+                if (res.correct) correctCount++;
+                html += `
+                    <div class="result-row">
+                        <div class="result-sign">${res.sign}</div>
+                        <div class="result-status">
+                            ${res.correct
+                        ? `<span style="color:var(--success-green)"><i class="fa fa-check"></i> Correct (${res.confidence}%)</span>`
+                        : `<span style="color:var(--error-red)"><i class="fa fa-times"></i> Incorrect (Found: ${res.detected})</span>`}
+                        </div>
+                    </div>
+                `;
+            });
+            resultsDiv.innerHTML = html;
+
+            document.getElementById('batchScoreText').textContent = `${correctCount}/${session.currentBatchResults.length}`;
+
+            // ---------- Gamification panel ----------
+            const panel = document.getElementById('batchGamiPanel');
+            const exp = session.currentBatchExpEarned;
+
+            if (exp > 0 || session.currentBatchAchievements.length > 0) {
+                panel.style.display = 'block';
+                document.getElementById('batchExpTotal').textContent = exp;
+
+                // Unique bonus descriptions
+                const bonusEl = document.getElementById('batchBonusList');
+                const seen = new Set();
+                const uniqueBonuses = session.currentBatchBonuses
+                    .map(b => b.description)
+                    .filter(d => { if (seen.has(d)) return false; seen.add(d); return true; });
+                bonusEl.innerHTML = uniqueBonuses.map(d => '\u2728 ' + d).join('  &middot;  ');
+
+                // Achievement chips
+                const achEl = document.getElementById('batchAchList');
+                achEl.innerHTML = session.currentBatchAchievements.map(ua => {
+                    const a = ua.achievement || ua;
+                    return '<span class="batch-ach-chip">'
+                         + (a.badge_icon || '\uD83C\uDFC5') + ' '
+                         + a.name
+                         + ' <small>(+' + (ua.exp_rewarded || 0) + ' EXP)</small>'
+                         + '</span>';
+                }).join('');
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function nextBatch() {
+            // Adjust difficulty based on the batch we just finished
+            const prevBatchResults = session.currentBatchResults;
+            adjustDifficulty(prevBatchResults);
+
+            document.getElementById('batchSummaryScreen').style.display = 'none';
+            startBatch(session.currentBatchIndex + 1);
+        }
+
+        // --- Session Complete ---
+
+        async function completeSession() {
+            if (fslModule) fslModule.stopCapture();
+
+            const rate = session.totalAttempts > 0
+                ? Math.round((session.totalCorrect / session.totalAttempts) * 100)
+                : 0;
+
+            document.getElementById('statTotal').textContent = session.totalAttempts;
+            document.getElementById('statCorrect').textContent = session.totalCorrect;
+            document.getElementById('statRate').textContent = `${rate}%`;
+
+            // Show loading state in recap area
+            document.getElementById('sessionRecap').innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);"><i class="fa fa-spinner fa-spin"></i> Saving results...</div>';
+            document.getElementById('completeScreen').style.display = 'block';
+
+            try {
+                // 1. Final save with aggregate stats
+                const saveResponse = await fetch('/dynamic/session/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.id,
+                        final_study_time: session.studyTime,
+                        final_threshold: session.threshold
+                    })
+                });
+
+                if (!saveResponse.ok) throw new Error("Failed to save session");
+                const saveData = await saveResponse.json();
+
+                // ===== GAMIFICATION: show session EXP + level-up + achievements =====
+                if (saveData.gamification && window.Gami) {
+                    // Small delay so EXP toast doesn't overlap with screen transition
+                    setTimeout(() => window.Gami.handleResponse(saveData.gamification), 600);
+                }
+                // ===== END GAMIFICATION =====
+
+                // 2. Fetch the detailed history we just saved
+                // Small delay to ensure DB commit is visible
+                await new Promise(r => setTimeout(r, 500));
+
+                const historyResponse = await fetch(`/dynamic/session/history?course={{ course }}&limit=1`);
+                const historyData = await historyResponse.json();
+
+                if (historyData.sessions && historyData.sessions.length > 0) {
+                    const sess = historyData.sessions[0];
+                    // Double check it's the right session (or just show the latest)
+                    renderSessionRecap(sess);
+                } else {
+                    document.getElementById('sessionRecap').innerHTML = '<p>No details available.</p>';
+                }
+
+            } catch (err) {
+                console.error("Error fetching summary:", err);
+                let msg = 'Error loading details.';
+                if (err.message) msg += ' ' + err.message;
+
+                // Try to show response text if available
+                if (err.response) {
+                    try {
+                        const txt = await err.response.text();
+                        console.error("Response text:", txt);
+                    } catch (e) { }
+                }
+
+                document.getElementById('sessionRecap').innerHTML = `<p style="color:var(--error-red)">${msg} <br/>Please refresh to see progress.</p>`;
+            }
+        }
+
+        function renderSessionRecap(sess) {
+            const container = document.getElementById('sessionRecap');
+            let html = '';
+
+            // 1. Analyze attempts to link retries
+            const signOccurrences = {}; // Map sign_id -> array of attempts
+            sess.attempts.forEach(att => {
+                if (!signOccurrences[att.sign_id]) signOccurrences[att.sign_id] = [];
+                signOccurrences[att.sign_id].push(att);
+            });
+
+            // Tag attempts with metadata
+            const attemptMeta = new Map(); // attempt object -> meta object
+
+            Object.values(signOccurrences).forEach(occurrences => {
+                // Sort by time/order
+                occurrences.sort((a, b) => {
+                    const batchDiff = (a.batch_index || 0) - (b.batch_index || 0);
+                    if (batchDiff !== 0) return batchDiff;
+                    return (a.performance_order_index || 0) - (b.performance_order_index || 0);
+                });
+
+                occurrences.forEach((att, index) => {
+                    const meta = { isRetry: false, retriedInBatch: null };
+
+                    if (index > 0) {
+                        meta.isRetry = true;
+                        meta.retryOfBatch = occurrences[0].batch_index + 1;
+                    }
+
+                    if (index < occurrences.length - 1) {
+                        meta.retriedInBatch = occurrences[index + 1].batch_index + 1;
+                    }
+
+                    attemptMeta.set(att, meta);
+                });
+            });
+
+            // 2. Group by batch for rendering
+            const batches = {};
+            sess.attempts.forEach(att => {
+                const bIdx = att.batch_index !== null ? att.batch_index : 999;
+                if (!batches[bIdx]) batches[bIdx] = [];
+                batches[bIdx].push(att);
+            });
+
+            // 3. Render batches with concise linear format
+            Object.keys(batches).sort((a, b) => a - b).forEach(bIdx => {
+                const batch = batches[bIdx].sort((a, b) => (a.performance_order_index || 0) - (b.performance_order_index || 0));
+
+                // Calculate batch analytics
+                const acc = Math.round((batch.filter(a => a.was_correct).length / batch.length) * 100);
+                const limit = batch[0].study_time_limit;
+                const thresh = batch[0].current_threshold;
+
+                // Determine time adjustment
+                let timeAdjustment = '';
+                if (limit) {
+                    if (acc >= 80) timeAdjustment = ' <span style="color: #10B981;">(Time Reduced -0.5s)</span>';
+                    else if (acc < 50) timeAdjustment = ' <span style="color: #EF4444;">(Time Increased +1.0s)</span>';
+                }
+
+                // Build sign list with study time
+                const signList = batch.map(att => {
+                    const meta = attemptMeta.get(att) || {};
+                    const isSkipped = att.ai_detected_sign === 'SKIPPED';
+                    const isCorrect = att.was_correct;
+
+                    let status = isCorrect ? '<span style="color: #10B981;">✓ correct</span>' :
+                        isSkipped ? '<span style="color: #F59E0B;">⊘ skipped</span>' :
+                            '<span style="color: #EF4444;">✗ incorrect</span>';
+
+                    // Show study time if available
+                    const studyTime = att.study_time_used ? ` <span style="font-size: 11px; color: #6b7280;">(${att.study_time_used.toFixed(1)}s)</span>` : '';
+
+                    // Retry labeling - show where it came from or where it's going
+                    let retryLabel = '';
+                    if (meta.isRetry && meta.retryOfBatch) {
+                        retryLabel = ` <span style="font-size: 11px; color: #888;">(reappeared from Batch ${meta.retryOfBatch})</span>`;
+                    } else if (meta.retriedInBatch) {
+                        retryLabel = ` <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">→ reappears in Batch ${meta.retriedInBatch}</span>`;
+                    }
+
+                    return `<b>${att.sign_id}</b> ${status}${studyTime}${retryLabel}`;
+                }).join(', ');
+
+                html += `
+                    <div style="margin-bottom: 12px; padding: 10px; background: #f9fafb; border-left: 3px solid ${acc >= 80 ? '#10B981' : (acc < 50 ? '#EF4444' : '#F59E0B')}; border-radius: 4px;">
+                        <div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                            Batch ${parseInt(bIdx) + 1}${timeAdjustment}
+                        </div>
+                        <div style="font-size: 13px; color: #4b5563; line-height: 1.6;">
+                            ${signList}
+                        </div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">
+                            Accuracy: <b>${acc}%</b>${limit ? ` • Study Time: ${limit.toFixed(1)}s` : ''}${thresh ? ` • Threshold: ${thresh}%` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // --- Adaptive Difficulty ---
+
+        function adjustDifficulty(batchResults) {
+            if (!batchResults || batchResults.length === 0) return;
+
+            const correctCount = batchResults.filter(r => r.correct).length;
+            const total = batchResults.length;
+            const scorePct = correctCount / total; // 0.0 to 1.0
+
+            // Logic:
+            // > 66% (e.g. 2/3 or 3/3) -> Reduce Study Time (Harder)
+            // < 33% (e.g. 0/3 or 1/3) -> Increase Study Time (Easier)
+            // Else -> Keep same
+
+            console.log(`Batch finished. Score: ${correctCount}/${total} (${Math.round(scorePct * 100)}%)`);
+
+            if (scorePct > 0.66 && session.studyTime > 1) {
+                const oldTime = session.studyTime;
+                session.studyTime = Math.max(1, session.studyTime - 1);
+                if (oldTime !== session.studyTime) {
+                    showToast(`Great job! Study time reduced to ${session.studyTime}s`);
+                }
+            }
+            else if (scorePct < 0.34 && session.studyTime < 10) {
+                const oldTime = session.studyTime;
+                session.studyTime = Math.min(10, session.studyTime + 2);
+                if (oldTime !== session.studyTime) {
+                    showToast(`Study time increased to ${session.studyTime}s`);
+                }
+            }
+
+            // Update Interface
+            const timeDisplay = document.getElementById('displayStudyTime');
+            if (timeDisplay) timeDisplay.textContent = session.studyTime + 's';
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px;
+                background: #1F2937; color: white;
+                padding: 12px 24px; border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000; animation: fadeIn 0.3s;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // --- Progress Modal ---
+
+        async function showProgressModal() {
+            document.getElementById('progressModal').style.display = 'flex';
+
+            try {
+                const response = await fetch(`/dynamic/session/history?course={{ course }}&limit=5`);
+                const data = await response.json();
+
+                const content = document.getElementById('progressContent');
+
+                if (!data.sessions || data.sessions.length === 0) {
+                    content.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">No sessions yet. Start practicing!</p>`;
+                    return;
+                }
+
+                let html = '';
+                data.sessions.forEach((sess, idx) => {
+                    const rate = sess.total_signs > 0 ? Math.round((sess.correct_count / sess.total_signs) * 100) : 0;
+                    const rateColor = rate >= 80 ? 'var(--success-green)' : (rate >= 50 ? 'var(--warning-yellow)' : 'var(--error-red)');
+
+                    html += `
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: var(--shadow-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div>
+                                    <strong>${new Date(sess.completed_at).toLocaleString()}</strong>
+                                </div>
+                                <div>
+                                    <span style="background: ${rateColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
+                                        ${sess.correct_count}/${sess.total_signs} (${rate}%)
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
+                                Study Time: ${sess.final_study_time}s | Threshold: ${sess.final_threshold}%
+                            </div>
+                    `;
+
+                    // Group attempts by batch
+                    const batches = {};
+                    sess.attempts.forEach(att => {
+                        const bIdx = att.batch_index !== null ? att.batch_index : 'unknown';
+                        if (!batches[bIdx]) batches[bIdx] = [];
+                        batches[bIdx].push(att);
+                    });
+
+                    // Sort and display batches
+                    Object.keys(batches).sort().forEach(bIdx => {
+                        const batch = batches[bIdx].sort((a, b) => (a.performance_order_index || 0) - (b.performance_order_index || 0));
+                        const batchCorrect = batch.filter(a => a.was_correct).length;
+
+                        html += `
+                            <div style="margin-top: 10px; padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 5px;">
+                                    Batch ${parseInt(bIdx) + 1} (${batchCorrect}/${batch.length})
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                        `;
+
+                        batch.forEach(att => {
+                            const bgColor = att.was_correct ? 'var(--success-green)' : 'var(--error-red)';
+                            const isRetry = att.ai_detected_sign === 'REPEATED';
+                            html += `
+                                <span style="background: ${bgColor}; color: white; padding: 6px 10px; border-radius: 6px; font-size: 13px; position: relative;">
+                                    ${att.sign_id}
+                                    ${att.was_correct ? '✓' : '✗'}
+                                    ${isRetry ? ' 🔄' : ''}
+                                    ${att.study_time_used > sess.final_study_time ? ' ⏱️' : ''}
+                                </span>
+                            `;
+                        });
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                content.innerHTML = html;
+
+            } catch (err) {
+                console.error('Error loading progress:', err);
+                document.getElementById('progressContent').innerHTML =
+                    `<p style="color: var(--error-red);">Error loading progress data</p>`;
+            }
+        }
+
+        function closeProgressModal() {
+            document.getElementById('progressModal').style.display = 'none';
+        }
+
+        // Initialize
+        // Initialize
+        // updateStudyProgress();
+
+        /* Dark Mode Toggle Logic */
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const icon = darkModeToggle.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-moon-o');
+                    icon.classList.add('fa-sun-o');
+                } else {
+                    icon.classList.remove('fa-sun-o');
+                    icon.classList.add('fa-moon-o');
+                }
+                // Optional: Save preference
+                // localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            });
+        }
+    </script>
+    {% include "gamification_ui.html" %}
+</body>
+
+</html>

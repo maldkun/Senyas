@@ -1,0 +1,437 @@
+{% extends "base.html" %} {% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Kumusta, {{ current_user.first_name }}! 👋</h1>
+            <p class="text-muted mb-0">Ready to continue your Filipino Sign Language journey?</p>
+        </div>
+        <div class="user-badge-header">
+            <div class="user-avatar-circle">U2</div>
+            <span class="font-weight-bold">{{ current_user.first_name }}</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- LEFT COLUMN: Learning Path -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="font-weight-bold border-left border-warning pl-3" style="border-width: 4px !important;">
+                    Learning Path</h5>
+                <a href="#" class="small font-weight-bold text-primary">View All Units</a>
+            </div>
+
+            <div class="row">
+                <!-- Unit 1: Alphabets -->
+                <div class="col-md-6 mb-4">
+                    {% if current_user.fsl_progress >= 5 %}
+                    <!-- COMPLETED STATE -->
+                    <div class="unit-card">
+                        <div class="mb-3 clearfix">
+                            <span class="status-badge completed">
+                                <i class="fas fa-check-circle mr-1"></i> Completed
+                            </span>
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px; opacity: 0.2; color: #10B981 !important; background-color: #D1FAE5 !important;">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2">Alphabets</h4>
+                        <p class="text-muted small mb-4">Master the FSL handshapes for the basic alphabet.</p>
+                        <a href="#" onclick="showDifficultySelection(event)"
+                            class="btn btn-light btn-block font-weight-bold text-dark border">Review Lesson</a>
+                    </div>
+                    {% else %}
+                    <!-- IN PROGRESS STATE -->
+                    <div class="unit-card current shadow-sm">
+                        <div class="mb-3 clearfix">
+                            <span class="status-badge current">Current</span>
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-play ml-1"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2">Alphabets</h4>
+                        <p class="text-muted small mb-2">Master the FSL handshapes for the basic alphabet.</p>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="progress flex-grow-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="width: {{ (current_user.fsl_progress / 5) * 100 }}%"></div>
+                            </div>
+                            <span class="small font-weight-bold text-primary ml-2">{{ (current_user.fsl_progress / 5) *
+                                100 | int }}%</span>
+                        </div>
+
+                        <a href="#" onclick="showDifficultySelection(event)"
+                            class="btn btn-primary btn-block font-weight-bold">Continue
+                            Learning</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Unit 2: Common Words -->
+                <div class="col-md-6 mb-4">
+                    {% if current_user.fsl_progress >= 5 %}
+                    <!-- UNLOCKED/CURRENT STATE -->
+                    <div class="unit-card current shadow-sm">
+                        <div class="mb-3 clearfix">
+                            <span class="status-badge current">Current</span>
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-play ml-1"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2">Common Words</h4>
+                        <p class="text-muted small mb-4">Learn everyday greetings and common nouns.</p>
+                        <a href="#" class="btn btn-primary btn-block font-weight-bold">Start Lesson</a>
+                    </div>
+                    {% else %}
+                    <!-- LOCKED STATE -->
+                    <div class="unit-card bg-light border-0">
+                        <div class="mb-3 clearfix">
+                            <div class="text-muted d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-lock mb-2" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2 text-muted">Common Words</h4>
+                        <p class="text-muted small mb-0">Learn everyday greetings and common nouns.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Unit 3: Basic Phrases (Locked) -->
+                <div class="col-md-6 mb-4">
+                    <div class="unit-card bg-light border-0">
+                        <div class="mb-3 clearfix">
+                            <div class="text-muted d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-lock mb-2" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2 text-muted">Basic Phrases</h4>
+                        <p class="text-muted small mb-0">Form simple sentences and ask questions.</p>
+                    </div>
+                </div>
+
+                <!-- Unit 4: Full Conversations (Locked) -->
+                <div class="col-md-6 mb-4">
+                    <div class="unit-card bg-light border-0">
+                        <div class="mb-3 clearfix">
+                            <div class="text-muted d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-lock mb-2" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                        <h4 class="mb-2 text-muted">Full Conversations</h4>
+                        <p class="text-muted small mb-0">Engage in long-form dialogue and storytelling.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video of the Day -->
+            <div class="card card-gradient-blue text-white mt-2 border-0 overflow-hidden" style="position: relative;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <span class="badge badge-warning text-dark mb-2 px-2 py-1">DID YOU KNOW?</span>
+                            <h3 class="mb-2">FSL is its own unique language!</h3>
+                            <p class="mb-0" style="opacity: 0.9;">Filipino Sign Language is the official sign language
+                                of the Deaf in the Philippines, distinct from ASL with its own syntax and grammar.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-info-circle text-warning display-4"></i>
+                        </div>
+                    </div>
+                    <!-- Decorative Circle -->
+                    <div
+                        style="position: absolute; width: 200px; height: 200px; border-radius: 50%; border: 20px solid rgba(255,255,255,0.05); top: -50px; right: -50px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Gamification Widgets -->
+        <div class="col-lg-4">
+
+          <!-- Level Card -->
+          <div class="card mb-4 border-0 shadow-sm" id="levelCard"
+               style="background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <div class="small" style="opacity:.8;">Current Level</div>
+                  <div class="h2 font-weight-bold mb-0" id="levelNum">—</div>
+                  <div class="small" id="levelTitle" style="opacity:.9;">Loading...</div>
+                </div>
+                <div style="width:56px;height:56px;border:3px solid rgba(255,255,255,0.6);border-radius:50%;
+                            display:flex;align-items:center;justify-content:center;font-size:1.6rem;">
+                  <span id="levelEmoji">⭐</span>
+                </div>
+              </div>
+              <!-- EXP bar (hidden when max level) -->
+              <div id="levelProgressWrap">
+                <div class="d-flex justify-content-between" style="font-size:0.78rem;opacity:.85;">
+                  <span id="levelExpText">0 / 150 EXP</span>
+                  <span id="levelPct">0%</span>
+                </div>
+                <div class="progress mt-1" style="height:8px;background:rgba(255,255,255,0.25);border-radius:4px;">
+                  <div id="levelBar" class="progress-bar" style="background:#fff;border-radius:4px;width:0%;"></div>
+                </div>
+                <div class="mt-1" style="font-size:0.75rem;opacity:.8;">
+                  <span id="expToNext">— EXP to next level</span>
+                </div>
+              </div>
+              <!-- Max level display -->
+              <div id="maxLevelWrap" style="display:none;">
+                <div class="text-center mt-1" style="font-size:0.85rem;opacity:.9;">
+                  🏆 MAX LEVEL — Total EXP: <span id="totalExpDisplay">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Streak Card -->
+          <div class="card mb-4">
+            <div class="card-body d-flex align-items-center">
+              <div style="font-size:2rem;margin-right:14px;">🔥</div>
+              <div class="flex-grow-1">
+                <div class="font-weight-bold"><span id="streakDays">—</span>-Day Streak</div>
+                <div class="text-muted small">Longest: <span id="longestStreak">—</span> days</div>
+              </div>
+              <div class="text-right">
+                <div class="font-weight-bold text-warning" id="streakBonus">+0 EXP</div>
+                <div class="text-muted" style="font-size:0.75rem;">per session</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Achievements -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0"><i class="fas fa-trophy text-warning mr-2"></i>Achievements</h5>
+                <a href="/achievements" class="small text-primary">View All →</a>
+              </div>
+              <div id="recentAchievements">
+                <p class="text-muted small mb-0">Loading...</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Difficulty Selection Modal -->
+<div class="modal fade" id="difficultyModal" tabindex="-1" role="dialog" aria-labelledby="difficultyModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-weight-bold" id="difficultyModalLabel">Select Difficulty</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted mb-4">Choose how you want to learn this lesson.</p>
+
+                <!-- Static Difficulty (Always Available) -->
+                <a href="/coursealphabets"
+                    class="btn btn-primary btn-block p-3 mb-3 text-left shadow-sm d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="font-weight-bold"><i class="fas fa-layer-group mr-2"></i> Static Difficulty</div>
+                        <small class="text-white-50">Standard lesson path (A-Z)</small>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+
+                <!-- Dynamic Difficulty -->
+                {% if current_user.dynamic_alphabets_unlocked %}
+                <a href="/coursedynamic/alphabets" id="dynamicDifficultyBtn"
+                    class="btn btn-success btn-block p-3 mb-3 text-left shadow-sm d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="font-weight-bold"><i class="fas fa-chart-line mr-2"></i> Dynamic
+                            Practice</div>
+                        <small class="text-white-50">Adaptive learning mode</small>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% else %}
+                <button
+                    class="btn btn-light btn-block p-3 mb-3 text-left border d-flex align-items-center justify-content-between"
+                    disabled style="opacity: 0.6; cursor: not-allowed;">
+                    <div>
+                        <div class="font-weight-bold text-muted"><i class="fas fa-lock mr-2"></i> Dynamic
+                            Practice</div>
+                        <small class="text-muted">Complete Static Difficulty first</small>
+                    </div>
+                    <i class="fas fa-lock"></i>
+                </button>
+                {% endif %}
+
+                <!-- AI Difficulty Adjustment (Dynamic) -->
+                <a href="/courseai" id="aiDifficultyBtn"
+                    class="btn btn-light btn-block p-3 text-left border d-flex align-items-center justify-content-between"
+                    style="opacity: 0.6; cursor: not-allowed; pointer-events: none;">
+                    <div>
+                        <div class="font-weight-bold text-muted"><i class="fas fa-robot mr-2"></i> AI Difficulty
+                            Adjustment</div>
+                        <small class="text-muted" id="aiSubtext">Loading...</small>
+                    </div>
+                    <i class="fas fa-lock" id="aiIcon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // Gamification widgets
+    // ============================================================
+    const LEVEL_EMOJIS = ['','🌱','✋','📝','👐','🙌','💫','🤝','🏅','🏆','👑'];
+
+    async function loadGamificationWidgets() {
+        try {
+            const [progRes, achRes] = await Promise.all([
+                fetch('/api/gamification/progress'),
+                fetch('/api/gamification/achievements')
+            ]);
+            const prog = await progRes.json();
+            const achData = await achRes.json();
+            renderLevelCard(prog);
+            renderStreakCard(prog);
+            renderRecentAchievements(achData.achievements);
+        } catch(e) {
+            console.warn('Gamification widgets failed to load', e);
+        }
+    }
+
+    function renderLevelCard(p) {
+        const lvl = p.current_level || 1;
+        document.getElementById('levelNum').textContent   = `Lv. ${lvl}`;
+        document.getElementById('levelTitle').textContent = p.level_title || '';
+        document.getElementById('levelEmoji').textContent = LEVEL_EMOJIS[Math.min(lvl, 10)] || '⭐';
+
+        if (p.is_max_level) {
+            document.getElementById('levelProgressWrap').style.display = 'none';
+            document.getElementById('maxLevelWrap').style.display = 'block';
+            document.getElementById('totalExpDisplay').textContent = (p.total_exp || 0).toLocaleString();
+        } else {
+            const pct = p.level_progress_percent || 0;
+            const exp_in_level = p.total_exp % 150;
+            document.getElementById('levelBar').style.width = pct + '%';
+            document.getElementById('levelPct').textContent = pct + '%';
+            document.getElementById('levelExpText').textContent = `${exp_in_level} / 150 EXP`;
+            document.getElementById('expToNext').textContent = `${p.exp_to_next_level} EXP to Level ${lvl+1}`;
+        }
+    }
+
+    function renderStreakCard(p) {
+        document.getElementById('streakDays').textContent   = p.current_streak_days || 0;
+        document.getElementById('longestStreak').textContent = p.longest_streak_days || 0;
+        document.getElementById('streakBonus').textContent  = `+${p.streak_bonus || 0} EXP`;
+    }
+
+    function renderRecentAchievements(achievements) {
+        const container = document.getElementById('recentAchievements');
+        const unlocked = (achievements || [])
+            .filter(a => a.is_unlocked)
+            .sort((a,b) => (b.unlocked_at||'').localeCompare(a.unlocked_at||''))
+            .slice(0, 3);
+
+        if (unlocked.length === 0) {
+            container.innerHTML = `
+              <p class="text-muted small mb-1">No achievements yet!</p>
+              <a href="/achievements" class="btn btn-sm btn-outline-primary mt-1">Start earning 🏅</a>`;
+            return;
+        }
+
+        container.innerHTML = unlocked.map(a => `
+          <div class="d-flex align-items-center mb-2">
+            <span style="font-size:1.5rem;margin-right:10px;">${a.badge_icon}</span>
+            <div>
+              <div class="font-weight-bold" style="font-size:0.875rem;">${a.name}</div>
+              <div class="text-muted" style="font-size:0.75rem;">+${a.exp_reward} EXP</div>
+            </div>
+          </div>`).join('') +
+          `<a href="/achievements" class="btn btn-sm btn-outline-primary btn-block mt-2">View All →</a>`;
+    }
+
+    loadGamificationWidgets();
+</script>
+
+<script>
+    let aiUnlockStatus = null;
+
+    function showDifficultySelection(e) {
+        e.preventDefault();
+        $('#difficultyModal').modal('show');
+        fetchAIUnlockStatus();
+    }
+
+    function fetchAIUnlockStatus() {
+        fetch('/api/ai/unlock_status')
+            .then(response => response.json())
+            .then(data => {
+                aiUnlockStatus = data;
+                updateDifficultyButtons(data);
+            })
+            .catch(error => {
+                console.error('Error fetching AI unlock status:', error);
+            });
+    }
+
+    function updateDifficultyButtons(status) {
+        const aiBtn = document.getElementById('aiDifficultyBtn');
+        const aiSubtext = document.getElementById('aiSubtext');
+        const aiIcon = document.getElementById('aiIcon');
+        const dynamicBtn = document.getElementById('dynamicDifficultyBtn');
+
+        if (status.is_unlocked) {
+            fetch('/api/ai/session_count')
+                .then(response => response.json())
+                .then(data => {
+                    const hasAISessions = data.count > 0;
+                    if (dynamicBtn) {
+                        dynamicBtn.className = 'btn btn-primary btn-block p-3 mb-3 text-left shadow-sm d-flex align-items-center justify-content-between';
+                    }
+                    aiBtn.style.opacity = '1';
+                    aiBtn.style.cursor = 'pointer';
+                    aiBtn.style.pointerEvents = 'auto';
+                    if (hasAISessions) {
+                        aiBtn.className = 'btn btn-primary btn-block p-3 text-left shadow-sm d-flex align-items-center justify-content-between';
+                    } else {
+                        aiBtn.className = 'btn btn-success btn-block p-3 text-left shadow-sm d-flex align-items-center justify-content-between';
+                    }
+                    aiBtn.querySelector('.font-weight-bold').className = 'font-weight-bold';
+                    aiBtn.querySelector('small').className = 'text-white-50';
+                    aiSubtext.textContent = 'Personalized AI coaching & weak-point training';
+                    aiIcon.className = 'fas fa-chevron-right';
+                })
+                .catch(error => {
+                    console.error('Error fetching AI session count:', error);
+                    if (dynamicBtn) dynamicBtn.className = 'btn btn-primary btn-block p-3 mb-3 text-left shadow-sm d-flex align-items-center justify-content-between';
+                    aiBtn.className = 'btn btn-success btn-block p-3 text-left shadow-sm d-flex align-items-center justify-content-between';
+                    aiBtn.style.opacity = '1';
+                    aiBtn.style.cursor = 'pointer';
+                    aiBtn.style.pointerEvents = 'auto';
+                    aiSubtext.textContent = 'Personalized AI coaching & weak-point training';
+                    aiIcon.className = 'fas fa-chevron-right';
+                });
+        } else {
+            const progress = status.progress;
+            const sessionsText = `${progress.sessions.current}/${progress.sessions.required} sessions`;
+            const attemptsText = `${progress.attempts.current}/${progress.attempts.required} attempts`;
+            const signsText    = `${progress.unique_signs.current}/${progress.unique_signs.required} signs`;
+            aiSubtext.textContent = `Complete: ${sessionsText}, ${attemptsText}, ${signsText}`;
+            aiIcon.className = 'fas fa-lock';
+        }
+    }
+</script>
+{% endblock %}

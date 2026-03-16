@@ -1,0 +1,10 @@
+{
+  "source_directories": [
+    ".",
+    "website",
+    "Sign Language model"
+  ],
+  "search_path": [
+    "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages"
+  ]
+}

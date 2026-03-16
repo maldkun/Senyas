@@ -1,0 +1,94 @@
+{% extends "base.html" %} {% block title %}Settings{% endblock %}
+
+{% block content %}
+<h1>Settings</h1>
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="fas fa-exclamation-triangle"></i> Danger Zone
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-danger">Delete Progress</h5>
+                <p class="card-text">Once you delete your progress, there is no going back. Please be certain.</p>
+                <button type="button" class="btn btn-outline-danger" data-toggle="modal"
+                    data-target="#deleteProgressModal">
+                    Delete Progress
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="deleteProgressModal" tabindex="-1" role="dialog" aria-labelledby="deleteProgressModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProgressModalLabel">Confirm Deletion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your progress? This action cannot be undone.</p>
+                <div class="form-group">
+                    <label for="passwordInput">Enter your password to confirm:</label>
+                    <input type="password" class="form-control" id="passwordInput" placeholder="Password">
+                    <div class="invalid-feedback" id="passwordError">
+                        Incorrect password.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Progress</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        const password = document.getElementById('passwordInput').value;
+        const errorDiv = document.getElementById('passwordError');
+        const passwordInput = document.getElementById('passwordInput');
+
+        if (!password) {
+            passwordInput.classList.add('is-invalid');
+            errorDiv.textContent = 'Password is required.';
+            return;
+        }
+
+        fetch('/api/delete-progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password: password }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    passwordInput.classList.add('is-invalid');
+                    errorDiv.textContent = data.error;
+                } else {
+                    // Success
+                    $('#deleteProgressModal').modal('hide');
+                    alert('Progress deleted successfully.');
+                    window.location.reload();
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+    });
+
+    // Clear error on input
+    document.getElementById('passwordInput').addEventListener('input', function () {
+        this.classList.remove('is-invalid');
+    });
+</script>
+{% endblock %}

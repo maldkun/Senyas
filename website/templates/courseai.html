@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Difficulty Adjustment</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- REMOVE EXTENDS BASE.HTML TO HIDE SIDEBAR -->
+
+    <style>
+        .container-fsl {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .btn-back {
+            background: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #0F1419;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: black;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .camera-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .study-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .study-sign-display {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #F5F5F5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .study-sign-display img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .countdown-timer {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1E40AF;
+            margin: 20px 0;
+        }
+    </style>
+
+    <div class="container-fsl">
+        <!-- Top Nav -->
+        <nav class="top-nav">
+            <a href="/" class="btn-back">
+                <i class="fa fa-arrow-left"></i> Back to Home
+            </a>
+        </nav>
+
+        <!-- LOADING STATE -->
+        <div id="aiLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Analyzing your learning profile...</p>
+        </div>
+
+        <!-- LOCKED VIEW -->
+        <div id="aiLockedView" style="display: none;">
+            <div class="text-center mb-5">
+                <div class="icon-circle bg-light text-muted mx-auto mb-3"
+                    style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                    <i class="fa fa-lock"></i>
+                </div>
+                <h1 class="font-weight-bold">AI Personalization Locked</h1>
+                <p class="text-muted">Complete the requirements to unlock AI-Driven Difficulty.</p>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4">Unlock Requirements</h5>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="font-weight-600">Dynamic Sessions Completed</span>
+                            <span id="progressSessionsText">0 / 4</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px;">
+                            <div id="progressSessionsBar" class="progress-bar" role="progressbar"
+                                style="width: 0%; background-color: #1E40AF;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="font-weight-600">Total Sign Attempts</span>
+                            <span id="progressAttemptsText">0 / 50</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px;">
+                            <div id="progressAttemptsBar" class="progress-bar" role="progressbar"
+                                style="width: 0%; background-color: #1E40AF;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="font-weight-600">Unique Signs Practiced</span>
+                            <span id="progressSignsText">0 / 20</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px;">
+                            <div id="progressSignsBar" class="progress-bar" role="progressbar"
+                                style="width: 0%; background-color: #1E40AF;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3 text-center">
+                    <a href="/coursedynamic/alphabets" class="btn btn-primary font-weight-bold">
+                        Go to Dynamic Practice
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- START VIEW -->
+        <div id="aiStartView" style="display: none;">
+            <div class="row align-items-center mb-5">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge px-3 py-1 mr-2 rounded-pill"
+                            style="background-color: #1E40AF; color: white;">AI POWERED</span>
+                        <span class="text-muted small">Adaptive Learning</span>
+                    </div>
+                    <h1 class="font-weight-bold mb-2">AI-Driven Difficulty</h1>
+                    <p class="text-muted lead">
+                        AI has analyzed your performance and selected 15 signs to optimize your learning curve.
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fa fa-robot" style="font-size: 80px; opacity: 0.2; color: #1E40AF;"></i>
+                </div>
+            </div>
+
+            <div class="card shadow-md border-0 mb-4"
+                style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+                <div class="card-body p-5 text-center">
+                    <h3 class="font-weight-bold mb-4">Your Personalized Session</h3>
+
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-4 border-right">
+                            <h2 class="font-weight-bold text-danger mb-0">8</h2>
+                            <small class="text-muted text-uppercase font-weight-bold">Challenging</small>
+                        </div>
+                        <div class="col-4 border-right">
+                            <h2 class="font-weight-bold text-warning mb-0">4</h2>
+                            <small class="text-muted text-uppercase font-weight-bold">Moderate</small>
+                        </div>
+                        <div class="col-4">
+                            <h2 class="font-weight-bold text-success mb-0">3</h2>
+                            <small class="text-muted text-uppercase font-weight-bold">Easy</small>
+                        </div>
+                    </div>
+
+                    <p class="text-muted mb-4">
+                        Study times and validation thresholds are personalized for each sign.
+                    </p>
+
+                    <button onclick="startAiSession()"
+                        class="btn btn-lg px-5 py-3 rounded-pill font-weight-bold shadow-sm"
+                        style="background-color: #1E40AF; color: white;">
+                        <i class="fa fa-play mr-2"></i> Start Personalized Session
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STUDY MODAL -->
+        <div id="studyModal" class="modal-overlay">
+            <div class="study-modal">
+                <div style="font-size: 14px; color: #6B7280; margin-bottom: 8px;">
+                    AI PERSONALIZED STUDY
+                </div>
+                <h2>Memorize: <span id="studySignChar" style="color: #1E40AF; font-size: 1.2em;">-</span></h2>
+                <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                    Sign <span id="currentSignNum">1</span> of 15
+                </div>
+
+                <div class="study-sign-display">
+                    <img id="studySignImage" src="" alt="Sign">
+                </div>
+
+                <div class="countdown-timer" id="countdownTimer">5</div>
+
+                <div style="font-size: 12px; color: #888;">
+                    <i class="fa fa-info-circle"></i> Study Time: <span id="displayStudyTime">5s</span> | Threshold:
+                    <span id="displayThreshold">70%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRACTICE VIEW -->
+        <div id="aiPracticeView" style="display: none;">
+            <div class="row">
+                <!-- Left: Controls -->
+                <div class="col-lg-5 mb-4 mb-lg-0 d-flex flex-column justify-content-center">
+                    <div class="card border-0 p-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 style="font-size: 1.5rem; margin: 0;">Sign: <span id="currentSign"
+                                    style="color: #4F6FFF; font-weight: 800;">-</span></h2>
+                            <div class="badge badge-primary" id="progressBadge">0 / 15</div>
+                        </div>
+
+                        <div class="bg-light rounded p-3 mb-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="mr-3" id="statusIcon"
+                                    style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.1); color: #EF4444; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                    <i class="fa fa-hand-paper-o"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 16px;" id="statusText">Position your hand
+                                    </div>
+                                    <div style="font-size: 14px; color: #6B7280;" id="statusSubtext">Show the sign to
+                                        the
+                                        camera</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between font-size-12 mb-1">
+                                    <span>Confidence</span>
+                                    <span id="confidenceText">0%</span>
+                                </div>
+                                <div class="progress" style="height: 12px; background: #E5E7EB; border-radius: 6px;">
+                                    <div class="progress-bar bg-success" id="confidenceFill"
+                                        style="width: 0%; transition: width 0.3s;"></div>
+                                </div>
+                                <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">
+                                    Required: <span id="requiredThreshold">70</span>%
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" onclick="skipSign()">
+                            <i class="fa fa-forward"></i> Skip This Sign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Camera -->
+                <div class="col-lg-7">
+                    <div class="camera-container">
+                        <video id="aiVideo" autoplay playsinline muted style="display: none;"></video>
+                        <canvas id="aiCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORT VIEW -->
+        <div id="aiReportView" style="display: none;">
+            <div class="text-center mb-5">
+                <h1 class="font-weight-bold">Session Complete! 🤖</h1>
+                <p class="text-muted">Here is your AI performance analysis</p>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow-lg border-0 mb-4">
+                        <div class="card-body p-5">
+                            <div class="row text-center mb-4">
+                                <div class="col-6">
+                                    <h6 class="text-uppercase text-muted">Correct</h6>
+                                    <h2 class="display-4 font-weight-bold text-success" id="reportCorrect">0</h2>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-uppercase text-muted">Total</h6>
+                                    <h2 class="display-4 font-weight-bold" id="reportTotal">15</h2>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Sign Tier Breakdown -->
+                            <div class="mt-4">
+                                <h5 class="font-weight-bold mb-3">AI Session Plan Breakdown</h5>
+                                <p class="text-muted small">Signs are categorized based on your historical performance,
+                                    confidence, and consistency.</p>
+
+                                <!-- Challenging Signs -->
+                                <div class="mb-4" id="challengingSection">
+                                    <h6 class="font-weight-bold text-danger"><i
+                                            class="fa fa-exclamation-triangle mr-2"></i>Challenging Signs (8)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Sign</th>
+                                                    <th>Result</th>
+                                                    <th>Overall Accuracy</th>
+                                                    <th>Avg Confidence</th>
+                                                    <th>Total Attempts</th>
+                                                    <th>Predicted Success</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="challengingTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Moderate Signs -->
+                                <div class="mb-4" id="moderateSection">
+                                    <h6 class="font-weight-bold text-warning"><i class="fa fa-adjust mr-2"></i>Moderate
+                                        Signs (4)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Sign</th>
+                                                    <th>Result</th>
+                                                    <th>Overall Accuracy</th>
+                                                    <th>Avg Confidence</th>
+                                                    <th>Total Attempts</th>
+                                                    <th>Predicted Success</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="moderateTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Easy Signs -->
+                                <div class="mb-4" id="easySection">
+                                    <h6 class="font-weight-bold text-success"><i
+                                            class="fa fa-check-circle mr-2"></i>Easy Signs (3)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Sign</th>
+                                                    <th>Result</th>
+                                                    <th>Overall Accuracy</th>
+                                                    <th>Avg Confidence</th>
+                                                    <th>Total Attempts</th>
+                                                    <th>Predicted Success</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="easyTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 text-center">
+                                <a href="/" class="btn btn-outline-secondary mr-2">Back to Home</a>
+                                <button onclick="location.reload()" class="btn btn-primary px-4">New AI Session</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='fsl_module.js') }}"></script>
+    <script src="{{ url_for('static', filename='ai_practise.js') }}"></script>
+    {% include "gamification_ui.html" %}
+</body>
+
+</html>

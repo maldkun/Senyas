@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+        crossorigin="anonymous" />
+    <title>{% block title %}Alphabets - Static Difficulty{% endblock %}</title>
+    <style>
+        :root {
+            --primary-blue: #1E40AF;
+            --primary-blue-hover: #15328e;
+            --light-blue: #5B7CFF;
+            --bg-color: #F5F5F5;
+            --card-active-grad: linear-gradient(135deg, #5B7CFF 0%, #4F6FFF 100%);
+            --card-locked-bg: #E8E8E8;
+            --text-primary: #0F1419;
+            --text-secondary: #6B7280;
+            --text-on-blue: #FFFFFF;
+            --progress-empty: #D1D5DB;
+            --progress-fill: linear-gradient(90deg, #5B7CFF 0%, #4F6FFF 100%);
+            --icon-gray: #9CA3AF;
+            --white: #FFFFFF;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(79, 111, 255, 0.2);
+            --dark-navy: #1A1D2E;
+            --info-box-bg: #E8F4F8;
+            --dashed-border: #D1D5DB;
+            --illustration-placeholder: #F9FAFB;
+            --success-green: #10B981;
+            --error-red: #EF4444;
+            --warning-yellow: #F59E0B;
+        }
+
+        /* Feedback Modals */
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .feedback-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: scale(0.95);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .feedback-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-icon.success {
+            color: var(--success-green);
+        }
+
+        .feedback-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feedback-details {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes popIn {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Dark Mode overrides via class on body */
+        body.dark-mode {
+            --bg-color: #15202B;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --card-locked-bg: #2C3640;
+            --white: #1E2732;
+            --progress-empty: #374151;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+            --info-box-bg: #2C3640;
+            /* Darker info box for dark mode */
+            --dashed-border: #4B5563;
+            --illustration-placeholder: #1F2937;
+        }
+
+        .container-fsl {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .btn-back {
+            background: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        .dark-mode-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--white);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Header */
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .difficulty-highlight {
+            color: var(--primary-blue);
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-bottom: 40px;
+            background: var(--white);
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-badge {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .custom-progress-track {
+            background-color: var(--progress-empty);
+            height: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .custom-progress-fill {
+            height: 100%;
+            background: var(--progress-fill);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        }
+
+        /* Parts Grid */
+        .parts-grid {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .parts-grid::before {
+            content: '→';
+            font-size: 24px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .part-separator {
+            font-size: 24px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .part-card {
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: default;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 140px;
+            height: 180px;
+            flex-shrink: 0;
+        }
+
+        /* Active Card Style */
+        .part-card.active {
+            background: var(--card-active-grad);
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+        }
+
+        .part-card.active:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(79, 111, 255, 0.3);
+        }
+
+        .part-card.active .part-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .part-card.active .letter-range {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0 16px;
+        }
+
+        .play-btn-visual {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .part-card.active:hover .play-btn-visual {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Locked Card Style */
+        .part-card.locked {
+            background: var(--card-locked-bg);
+            color: var(--icon-gray);
+        }
+
+        .part-card.locked .part-label {
+            color: var(--text-secondary);
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        .part-card.locked .letter-range {
+            color: var(--text-secondary);
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0 16px;
+            opacity: 0.5;
+        }
+
+        .part-card.locked .lock-icon {
+            font-size: 24px;
+            color: var(--icon-gray);
+        }
+
+
+        /* Tips Section */
+        .tips-container {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .tips-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tips-header:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .tips-icon-circle {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 12px;
+        }
+
+        .tips-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+
+        .tips-chevron {
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .tips-chevron.rotated {
+            transform: rotate(180deg);
+        }
+
+        .tips-content {
+            padding: 0 24px 24px;
+            display: none;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1199px) {
+
+            /* Tablet */
+            .parts-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            /* Mobile */
+            .parts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+
+            .container-fsl {
+                padding: 20px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            /* Small Mobile */
+            .parts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Learning View Specific Customization */
+        .learning-header-bar {
+            background-color: var(--dark-navy);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .learning-header-title {
+            font-weight: 600;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-change-part {
+            background: transparent;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none !important;
+        }
+
+        .btn-change-part:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+
+        .learning-card-body {
+            background: var(--white);
+            border-radius: 0 0 12px 12px;
+            padding: 48px 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .illustration-container {
+            border: 2px dashed var(--dashed-border);
+            border-radius: 12px;
+            background: var(--illustration-placeholder);
+            padding: 40px;
+            text-align: center;
+            aspect-ratio: 1/1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .headline-mastering {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .headline-mastering span {
+            color: var(--primary-blue);
+        }
+
+        .illustration-caption {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-top: 16px;
+        }
+
+        .instruction-italic {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .info-box-cyan {
+            background: var(--info-box-bg);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .info-box-cyan i {
+            color: #00BCD4;
+            /* Cyan/Teal */
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .btn-validate-main {
+            background: var(--primary-blue);
+            color: white;
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 24px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-validate-main:hover {
+            background: var(--primary-blue-hover);
+            transform: scale(1.01);
+            color: white;
+        }
+
+        .btn-skip-primary {
+            background: var(--primary-blue);
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-skip-primary:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Camera Section */
+        .camera-placeholder {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px;
+            color: #D1D5DB;
+            /* Light gray icon */
+            font-size: 60px;
+        }
+
+        .camera-active-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            background: black;
+            position: relative;
+        }
+
+        .validation-headline {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .validation-subtext {
+            font-size: 15px;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .part-tracker {
+            margin-top: 24px;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    {% block content %}
+    <div class="container-fsl">
+        <!-- Top Nav -->
+        <nav class="top-nav">
+            <a href="/" class="btn-back">
+                <i class="fa fa-arrow-left"></i> Back to Home
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle Dark Mode">
+                <i class="fa fa-moon-o"></i>
+            </button>
+        </nav>
+
+        <!-- Header -->
+        <header class="page-header">
+            <h1 class="page-title">Alphabets: <span class="difficulty-highlight">Static Difficulty</span></h1>
+            <p class="page-subtitle">Structured Filipino Sign Language course with real-time AI validation</p>
+        </header>
+
+        <!-- Progress Section -->
+        <section class="progress-section">
+            <div class="progress-header">
+                <div>
+                    <span class="progress-label" id="currentPartLabel">Current Progress: Part {{ fsl_progress }}
+                        Completed</span>
+                </div>
+                <span class="progress-badge" id="overallProgressPercent">{{ fsl_progress * 20 }}%</span>
+            </div>
+            <div class="custom-progress-track">
+                <div id="overallProgressBar" class="custom-progress-fill" style="width: {{ fsl_progress * 20 }}%;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Parts Grid (Selection Area) -->
+        <section class="parts-grid" id="partSelectionArea">
+            {% for i in range(1, 6) %}
+
+            {% if i <= fsl_progress %} <div id="part-card-{{ i }}" class="part-card active"
+                onclick="startLearningPart({{ i }})">
+                <span class="part-label">Part {{ i }}</span>
+                <div class="letter-range">
+                    {% if i == 1 %}A–E{% elif i == 2 %}F–J{% elif i == 3 %}K–O{% elif i == 4 %}P–T{% else %}U–Z{% endif
+                    %}
+                </div>
+                <div class="play-btn-visual"><i class="fa fa-check"></i></div>
+    </div>
+    {% elif i == fsl_progress + 1 %}
+    <!-- Active Part -->
+    <div id="part-card-{{ i }}" class="part-card active" onclick="startLearningPart({{ i }})">
+        <span class="part-label">Part {{ i }}</span>
+        <div class="letter-range">
+            {% if i == 1 %}A–E{% elif i == 2 %}F–J{% elif i == 3 %}K–O{% elif i == 4 %}P–T{% else %}U–Z{% endif %}
+        </div>
+        <div class="play-btn-visual"><i class="fa fa-play"></i></div>
+    </div>
+    {% else %}
+    <!-- Locked Part -->
+    <div id="part-card-{{ i }}" class="part-card locked">
+        <span class="part-label">Part {{ i }}</span>
+        <div class="letter-range">
+            {% if i == 1 %}A–E{% elif i == 2 %}F–J{% elif i == 3 %}K–O{% elif i == 4 %}P–T{% else %}U–Z{% endif %}
+        </div>
+        <div><i class="fa fa-lock lock-icon"></i></div>
+    </div>
+    {% endif %}
+    {% if i < 5 %}<span class="part-separator">→</span>{% endif %}
+        {% endfor %}
+        </section>
+
+        <!-- Learning View (Hidden until part selected) -->
+        <div id="learningView" style="display: none;">
+
+            <div class="learning-header-bar">
+                <div class="learning-header-title">
+                    <i class="fa fa-graduation-cap" style="color: var(--light-blue);"></i>
+                    <span id="learningTitle">Learning Part: A–E</span>
+                </div>
+                <button class="btn-change-part" onclick="showPartSelection()">
+                    <i class="fa fa-exchange"></i> Change Part
+                </button>
+            </div>
+
+            <div class="learning-card-body">
+                <div class="row">
+                    <div class="col-lg-5 mb-4 mb-lg-0 d-flex flex-column justify-content-center">
+                        <div class="learning-action-card"
+                            style="padding: 2rem; background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #F3F4F6;">
+                            <h2 class="headline-mastering" style="font-size: 1.5rem; margin-bottom: 1.5rem;">
+                                Target Sign: <span id="targetLetter" style="color: #2563EB; font-weight: 800;">-</span>
+                            </h2>
+
+                            <div class="info-box-cyan" style="margin-bottom: 2rem;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <i class="fa fa-video-camera"
+                                        style="color: #0891b2; font-size: 1.2rem; margin-top: 2px;"></i>
+                                    <div>
+                                        <div style="font-weight: 700; color: #164e63; margin-bottom: 4px;">Ready to
+                                            Validate?</div>
+                                        <div style="font-size: 0.9rem; color: #155e75; line-height: 1.4;">
+                                            Position your hand in the frame and click the button below.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="readyToScanBtn" class="btn-validate-main">
+                                <i class="fa fa-camera"></i> Start Camera & Validate
+                            </button>
+
+                            <div class="mt-4 text-center">
+                                <button id="skipSignBtn" class="btn-skip-primary" onclick="skipCurrentSign()">
+                                    <i class="fa fa-forward"></i> Skip this sign
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Validation / Camera -->
+                    <div class="col-lg-7 d-flex flex-column justify-content-center align-items-center">
+
+                        <!-- State 1: WAITING (Initial) -->
+                        <div id="waitingForCamera" style="display: block; width: 100%; text-align: center;">
+                            <div class="camera-placeholder">
+                                <i class="fa fa-video-camera" style="opacity: 0.5;"></i>
+                                <!-- Crossed out or muted look -->
+                            </div>
+                            <h3 class="validation-headline">Ready to validate your sign?</h3>
+                            <p class="validation-subtext">Click the "Ready to Validate" button to start the camera and
+                                confirm your sign.</p>
+                        </div>
+
+                        <!-- State 2: ACTIVE (Camera On) -->
+                        <div id="validationSection" style="display: none; width: 100%;">
+                            <div class="camera-active-container">
+                                <video id="learningVideo" autoplay playsinline muted style="display: none;"></video>
+                                <canvas id="learningCanvas" style="width: 100%; display: block;"></canvas>
+
+                                <!-- Overlay Feedback -->
+                                <div id="validationFeedback" class="message-box"
+                                    style="position: absolute; bottom: 20px; left: 20px; right: 20px; margin: 0; display: none; z-index: 10;">
+                                    Analyzing...
+                                </div>
+                            </div>
+
+                            <!-- Recognition Output -->
+                            <div class="prediction-box mt-3" id="learningPredictionBox"
+                                style="background: var(--bg-color); border: none;">
+                                <div class="small text-muted">Detected Sign:</div>
+                                <div class="prediction-sign" id="learningDetectedSign"
+                                    style="color: var(--primary-blue);">-
+                                </div>
+
+                                <div id="consecutiveCorrectArea" class="mt-2" style="display: none;">
+                                    <div class="progress"
+                                        style="height: 8px; width: 150px; margin: 0 auto; background-color: var(--progress-empty);">
+                                        <div id="consecutiveProgressBar" class="progress-bar"
+                                            style="background-color: var(--success-green, #10B981); width: 0%;"></div>
+                                    </div>
+                                    <small class="text-muted">Hold steady: <span
+                                            id="consecutiveCountText">0/3</span></small>
+                                </div>
+                            </div>
+
+                            <button id="stopLearningBtn" class="btn btn-outline-danger btn-block mt-3"
+                                style="border-radius: 8px;">
+                                <i class="fa fa-pause"></i> Pause Learning
+                            </button>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <!-- Part Tracker -->
+                <div class="part-tracker">
+                    <hr style="border-color: var(--bg-color);">
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span style="font-weight: 600; color: var(--text-primary);">Part Completion:</span>
+                        <div style="flex-grow: 1; margin: 0 20px;">
+                            <!-- Internal Progress Bar -->
+                            <div class="progress"
+                                style="height: 8px; background-color: var(--progress-empty); border-radius: 4px;">
+                                <div id="partProgressBarInternal" class="progress-bar"
+                                    style="background-color: var(--primary-blue); width: 0%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <span id="partProgressText"
+                            style="font-style: italic; color: var(--text-secondary); font-size: 14px;">Starting...</span>
+                    </div>
+                    <!-- Sequence Text Display (Optional, keeping hidden for cleaner UI or styling it better if needed, user didn't explicitly ask for it in main view but logic uses it. Keep it hidden/subtle) -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion View -->
+        <div id="partCompletionView" class="text-center p-5 shadow rounded bg-white mt-4" style="display: none;">
+            <div id="completionIcon" class="mb-4"><i class="fa fa-check-circle fa-5x text-success"></i></div>
+            <div id="completionMessage">
+                <h2 class="mb-3">Part Complete!</h2>
+            </div>
+            <div class="mt-4">
+                <button id="nextPartBtn" class="btn btn-primary btn-lg px-5" onclick="continueToNextPart()"
+                    style="background: var(--primary-blue); border:none;">
+                    Continue to Next Part
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="feedback-modal">
+            <div class="feedback-content" id="feedbackContent">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="tips-container">
+            <div class="tips-header" onclick="toggleInfo()">
+                <div class="tips-icon-circle"><i class="fa fa-info"></i></div>
+                <div class="tips-title">Tips & Information <span
+                        style="font-weight: 400; color: var(--text-secondary); font-size: 14px;">(Click to
+                        toggle)</span></div>
+                <i class="fa fa-chevron-down tips-chevron" id="tipsChevron"></i>
+            </div>
+            <div id="infoSection" class="tips-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: var(--text-primary); font-weight: 600;">How It Works</h6>
+                        <ul class="text-muted small pl-3">
+                            <li><strong>Hand Detection:</strong> Uses AI to find hand landmarks.</li>
+                            <li><strong>Validation:</strong> Hold sign for 3 seconds.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="color: var(--text-primary); font-weight: 600;">Tips</h6>
+                        <ul class="text-muted small pl-3">
+                            <li>Ensure good lighting.</li>
+                            <li>Keep hand clearly visible.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+
+        {% endblock %}
+
+        <!-- Reference Modal: Dynamic (A-Z) -->
+        <div id="referenceModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content-custom">
+                <h3 class="modal-title">Memorize These Signs!</h3>
+                <p class="modal-subtitle">Study the signs below. Once you close this window, you cannot open it again
+                    for
+                    this session.</p>
+
+                <!-- Dynamic Grid Container -->
+                <div id="referenceGrid" class="reference-grid">
+                    <!-- Javascript will inject images here -->
+                </div>
+
+                <button class="btn-close-modal" onclick="closeReferenceModal()">I'm Ready to Validate</button>
+            </div>
+        </div>
+
+        <!-- MediaPipe Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+
+        <!-- Bootstrap Scripts -->
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+
+        <!-- FSL Module -->
+        <script src="{{ url_for('static', filename='fsl_module.js') }}"></script>
+
+        <style>
+            /* Modal Styles */
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(5px);
+            }
+
+            .modal-content-custom {
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                max-width: 900px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.4s ease-out;
+                /* Allow scrolling if content is too tall on small screens */
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(50px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .modal-title {
+                font-size: 32px;
+                font-weight: 700;
+                color: #1A1D2E;
+                margin-bottom: 12px;
+            }
+
+            .modal-subtitle {
+                color: #6B7280;
+                font-size: 16px;
+                margin-bottom: 32px;
+            }
+
+            .reference-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+
+            .ref-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .ref-item img {
+                width: 100%;
+                aspect-ratio: 1/1;
+                object-fit: cover;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border: 2px solid #E5E7EB;
+            }
+
+            .ref-item span {
+                font-weight: 700;
+                font-size: 24px;
+                color: #4F6FFF;
+            }
+
+            .btn-close-modal {
+                background: #4F6FFF;
+                color: white;
+                border: none;
+                padding: 16px 48px;
+                font-size: 18px;
+                font-weight: 600;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 12px rgba(79, 111, 255, 0.3);
+            }
+
+            .btn-close-modal:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(79, 111, 255, 0.4);
+                background: #4361EE;
+            }
+
+            @media (max-width: 768px) {
+                .reference-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+
+                .modal-content-custom {
+                    padding: 24px;
+                }
+            }
+        </style>
+
+        <script>
+            // Global State
+            let learningModule = null;
+            let currentPartIdx = null;
+            let isLearningActive = false;
+            let userProgress = {{ fsl_progress }}; // Injected from Flask
+            let isPaused = false; // Validation cooldown
+            let lastCompletedCount = 0; // To track new completions
+
+            // 1. Navigation & UI Controls
+            function showPartSelection() {
+                if (learningModule) learningModule.stopCapture();
+                document.getElementById('learningView').style.display = 'none';
+                document.getElementById('partCompletionView').style.display = 'none';
+                document.getElementById('partSelectionArea').style.display = 'flex';
+                isLearningActive = false;
+            }
+
+            function toggleInfo() {
+                const info = document.getElementById('infoSection');
+                const chevron = document.getElementById('tipsChevron');
+                if (info.style.display === 'none' || info.style.display === '') {
+                    info.style.display = 'block';
+                    if (chevron) chevron.classList.add('rotated');
+                } else {
+                    info.style.display = 'none';
+                    if (chevron) chevron.classList.remove('rotated');
+                }
+            }
+
+            // Dark Mode Toggle Logic
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const icon = darkModeToggle.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-moon-o');
+                    icon.classList.add('fa-sun-o');
+                } else {
+                    icon.classList.remove('fa-sun-o');
+                    icon.classList.add('fa-moon-o');
+                }
+                // Optional: Save preference to localStorage
+                // localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            });
+
+            // 2. Learning Part Logic
+            // Track session view state for all 5 parts
+            const hasViewedReferences = {
+                1: false, 2: false, 3: false, 4: false, 5: false
+            };
+
+            const partLettersMap = {
+                1: ['A', 'B', 'C', 'D', 'E'],
+                2: ['F', 'G', 'H', 'I', 'J'],
+                3: ['K', 'L', 'M', 'N', 'O'],
+                4: ['P', 'Q', 'R', 'S', 'T'],
+                5: ['U', 'V', 'W', 'X', 'Y', 'Z']
+            };
+
+            const signImageCounts = {
+                'A': 10, 'B': 10, 'C': 10, 'D': 10, 'E': 10,
+                'F': 10, 'G': 10, 'H': 10, 'I': 10, 'J': 10,
+                'K': 10, 'L': 10, 'M': 10, 'N': 10, 'O': 10,
+                'P': 10, 'Q': 10, 'R': 10, 'S': 10, 'T': 10,
+                'U': 10, 'V': 10, 'W': 10, 'X': 10, 'Y': 10, 'Z': 10
+            };
+
+            // 1. Navigation & UI Controls
+            function showPartSelection() {
+                if (learningModule) learningModule.stopCapture();
+                document.getElementById('learningView').style.display = 'none';
+                document.getElementById('partCompletionView').style.display = 'none';
+                document.getElementById('partSelectionArea').style.display = 'flex';
+                isLearningActive = false;
+
+                // Ensure UI reflects current progress
+                updatePartSelectionUI();
+            }
+
+            function updatePartSelectionUI() {
+                for (let i = 1; i <= 5; i++) {
+                    const card = document.getElementById(`part-card-${i}`);
+                    if (!card) continue;
+
+                    const range = card.querySelector('.letter-range').textContent.trim();
+
+                    let iconHtml = '';
+                    let className = 'part-card';
+                    let isClickable = false;
+
+                    if (i <= userProgress) {
+                        // Completed
+                        className += ' active';
+                        iconHtml = '<div class="play-btn-visual"><i class="fa fa-check"></i></div>';
+                        isClickable = true;
+                    } else if (i === userProgress + 1) {
+                        // Current
+                        className += ' active';
+                        iconHtml = '<div class="play-btn-visual"><i class="fa fa-play"></i></div>';
+                        isClickable = true;
+                    } else {
+                        // Locked
+                        className += ' locked';
+                        iconHtml = '<div><i class="fa fa-lock lock-icon"></i></div>';
+                        isClickable = false;
+                    }
+
+                    card.className = className;
+
+                    card.innerHTML = `
+                    <span class="part-label">Part ${i}</span>
+                    <div class="letter-range">${range}</div>
+                    ${iconHtml}
+                `;
+
+                    if (isClickable) {
+                        card.onclick = function () { startLearningPart(i); };
+                    } else {
+                        card.onclick = null;
+                    }
+                }
+            }
+
+            async function startLearningPart(partIdx) {
+                currentPartIdx = partIdx;
+
+                // Show loading or transition
+                document.getElementById('partSelectionArea').style.display = 'none';
+                document.getElementById('learningView').style.display = 'block';
+                document.getElementById('learningTitle').textContent = `Learning Part ${partIdx}: ${getPartLabel(partIdx)}`;
+
+                // Check if we need to show the reference modal for this part
+                if (!hasViewedReferences[partIdx]) {
+                    showReferenceModal(partIdx);
+                }
+
+                // Initialize module if needed
+                if (!learningModule) {
+                    // Initialize with Full Model (complexity 1) and lower thresholds
+                    learningModule = new FSLModule({
+                        apiBaseUrl: '/api/fsl',
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.4,
+                        modelComplexity: 1
+                    });
+
+
+
+                    const success = await learningModule.initialize(
+                        document.getElementById('learningVideo'),
+                        document.getElementById('learningCanvas')
+                    );
+                    if (!success) {
+                        alert('Failed to initialize AI Camera. Please check camera permissions.');
+                        showPartSelection();
+                        return;
+                    }
+                }
+
+                // Setup callbacks immediately to ensure UI updates
+                setupCallbacks();
+
+                // Start API sequence
+                const result = await learningModule.startSequenceByPart(partIdx);
+                if (result) {
+                    isLearningActive = true;
+                    updateLearningUI(result);
+                }
+            }
+
+            function showReferenceModal(partIdx) {
+                const grid = document.getElementById('referenceGrid');
+                grid.innerHTML = ''; // Clear previous content
+
+                const letters = partLettersMap[partIdx] || [];
+
+                letters.forEach(letter => {
+                    const item = document.createElement('div');
+                    item.className = 'ref-item';
+
+                    // Randomize image selection
+                    const count = signImageCounts[letter] || 1; // Default to 1 if missing
+                    const randIndex = Math.floor(Math.random() * count) + 1;
+
+                    // Construct image path: {Letter}_{index}.jpg
+                    const imgPath = `/static/images/signs/${letter}_${randIndex}.jpg`;
+
+                    item.innerHTML = `
+                    <div style="position: relative; cursor: pointer;" onclick="changeSignVariation('${letter}', this.querySelector('img'))" title="Click to see another variation">
+                        <img src="${imgPath}" alt="Sign ${letter}">
+                        <i class="fa fa-refresh" style="position: absolute; bottom: 8px; right: 8px; background: rgba(255,255,255,0.8); padding: 4px; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #4F6FFF;"></i>
+                    </div>
+                    <span>${letter}</span>
+                `;
+                    grid.appendChild(item);
+                });
+
+                document.getElementById('referenceModal').style.display = 'flex';
+            }
+
+            function changeSignVariation(letter, imgEl) {
+                const count = signImageCounts[letter] || 1;
+                if (count <= 1) return;
+
+                // Get current index from src if possible, or just pick random
+                // Simply picking random is fine, but let's try to be different
+                let newIndex = Math.floor(Math.random() * count) + 1;
+
+                // Basic check to try and get a different one (simple retry)
+                const currentSrc = imgEl.src;
+                if (currentSrc.includes(`_${newIndex}.jpg`)) {
+                    newIndex = (newIndex % count) + 1; // Just rotate to next if same
+                }
+
+                // Animate slightly
+                imgEl.style.opacity = '0.5';
+                setTimeout(() => {
+                    imgEl.src = `/static/images/signs/${letter}_${newIndex}.jpg`;
+                    imgEl.style.opacity = '1';
+                }, 150);
+            }
+
+            function closeReferenceModal() {
+                if (currentPartIdx && hasViewedReferences.hasOwnProperty(currentPartIdx)) {
+                    hasViewedReferences[currentPartIdx] = true;
+                }
+                document.getElementById('referenceModal').style.display = 'none';
+            }
+
+            function getPartLabel(idx) {
+                const labels = { 1: "A–E", 2: "F–J", 3: "K–O", 4: "P–T", 5: "U–Z" };
+                return labels[idx] || "";
+            }
+
+            // 3. Tutorial & Validation Flow
+            document.getElementById('readyToScanBtn').addEventListener('click', async () => {
+                // Hide the button itself to prevent double clicking
+                document.getElementById('readyToScanBtn').style.display = 'none';
+                // document.getElementById('tutorialSection').style.border = "none"; // Removed in new UI
+                document.getElementById('waitingForCamera').style.display = "none";
+                document.getElementById('validationSection').style.display = "block";
+
+                await learningModule.startCapture();
+
+                const feedback = document.getElementById('validationFeedback');
+                feedback.style.display = 'block';
+                feedback.className = 'message-box info';
+                feedback.textContent = "Adjusting camera... show your hand!";
+            });
+
+            document.getElementById('stopLearningBtn').addEventListener('click', () => {
+                learningModule.stopCapture();
+                document.getElementById('validationSection').style.display = "none";
+                document.getElementById('waitingForCamera').style.display = "block";
+                // Re-show ready button
+                document.getElementById('readyToScanBtn').style.display = 'block'; // Make sure this is visible again
+            });
+
+            // Feedback Logic
+            let feedbackTimeout = null;
+
+            function showFeedback(correct, expected, detected, conf) {
+                const modal = document.getElementById('feedbackModal');
+                const content = document.getElementById('feedbackContent');
+
+                if (feedbackTimeout) {
+                    clearTimeout(feedbackTimeout);
+                    feedbackTimeout = null;
+                }
+
+                if (correct) {
+                    content.innerHTML = `
+                        <div class="feedback-icon success"><i class="fa fa-check-circle"></i></div>
+                        <div class="feedback-title">Correct!</div>
+                        <div class="feedback-details">You signed <b>${expected}</b> correctly (${conf}%)</div>
+                    `;
+                }
+                modal.style.display = 'flex';
+            }
+
+            function closeFeedback() {
+                const modal = document.getElementById('feedbackModal');
+                if (modal) modal.style.display = 'none';
+
+                if (feedbackTimeout) {
+                    clearTimeout(feedbackTimeout);
+                    feedbackTimeout = null;
+                }
+            }
+
+            function setupCallbacks() {
+                learningModule.onHandDetected = (detected) => {
+                    const feedback = document.getElementById('validationFeedback');
+                    if (detected) {
+                        feedback.textContent = "Hand detected! Try to match the sign.";
+                        feedback.className = 'message-box success';
+                    } else {
+                        feedback.textContent = "No hand detected. Please center your hand.";
+                        feedback.className = 'message-box error';
+                    }
+                };
+
+                learningModule.onPrediction = async (result) => {
+                    // console.log("Prediction:", result);
+                    const detectedSignEl = document.getElementById('learningDetectedSign');
+                    const confPercent = result.confidence ? Math.round(result.confidence * 100) : 0;
+                    detectedSignEl.textContent = `${result.sign || "-"} (${confPercent}%)`;
+
+                    if (result.sign && result.threshold_met) {
+                        // Call backend to check if it matches target
+                        // console.log(`Checking sign: "${result.sign}"`);
+                        const checkResult = await learningModule.checkSignWithPart(result.sign, result.confidence, currentPartIdx);
+                        // console.log("Check Result:", checkResult);
+
+                        if (checkResult) {
+                            if (checkResult.is_correct) {
+                                // Sign is correct! Show feedback and delay transition
+                                showFeedback(true, result.sign, result.sign, confPercent);
+
+                                // Wait 1.5s then update UI to show next sign
+                                setTimeout(() => {
+                                    closeFeedback();
+                                    updateLearningUI(checkResult);
+                                }, 1500);
+                            } else {
+                                // Not correct (or just intermediate update), update UI immediately
+                                updateLearningUI(checkResult);
+                            }
+                        } else {
+                            console.error("Check failed (network error or no session). Restarting session...");
+                            // Auto-recover session
+                            const feedback = document.getElementById('validationFeedback');
+                            feedback.textContent = "Session expired. Reconnecting...";
+                            feedback.className = 'message-box info';
+
+                            // Re-initialize session silently
+                            await startLearningPart(currentPartIdx);
+                        }
+                    }
+                };
+            }
+
+            // 4. UI Updates
+            function updateLearningUI(checkResult) {
+                if (!checkResult) return;
+
+                // Update target letter
+                const target = checkResult.target;
+                document.getElementById('targetLetter').textContent = target || "DONE";
+                // Update caption too
+                const captionEl = document.getElementById('targetLetterCaptionRef');
+                if (captionEl) captionEl.textContent = target || "";
+
+                // Update sequence indicator
+                if (checkResult.sequence) {
+                    updateSequenceDisplay(checkResult);
+                }
+
+                // Update progress bar
+                updateProgressBar(checkResult);
+
+                // Handle completion
+                if (checkResult.is_complete) {
+                    handlePartCompletion(checkResult);
+                }
+            }
+
+            function updateSequenceDisplay(checkResult) {
+                const display = document.getElementById('learningSequenceDisplay');
+                if (!display) return;
+                display.innerHTML = '';
+
+                const sequence = checkResult.sequence || [];
+                const completed = checkResult.completed || [];
+                const target = checkResult.target;
+
+                sequence.forEach(sign => {
+                    const item = document.createElement('div');
+                    item.className = 'sequence-item';
+                    if (completed.includes(sign)) item.classList.add('completed');
+                    else if (sign === target) item.classList.add('current');
+                    item.textContent = sign;
+                    display.appendChild(item);
+                });
+            }
+
+            function updateUITexts(checkResult) {
+                // Update target letter
+                const target = checkResult.target;
+                document.getElementById('targetLetter').textContent = target || "DONE";
+                // Update caption too
+                const captionEl = document.getElementById('targetLetterCaptionRef');
+                if (captionEl) captionEl.textContent = target || "";
+
+                // Update sequence indicator
+                if (checkResult.sequence) {
+                    updateSequenceDisplay(checkResult);
+                }
+            }
+
+            function updateProgressBar(checkResult) {
+                const completedLen = checkResult.completed ? checkResult.completed.length : 0;
+                const sequenceLen = checkResult.sequence ? checkResult.sequence.length : 0;
+
+                // Update internal part progress
+                const progress = checkResult.progress_percent || 0;
+                document.getElementById('partProgressBarInternal').style.width = `${progress}%`;
+                document.getElementById('partProgressText').textContent = `${completedLen}/${sequenceLen}`;
+            }
+
+            async function handlePartCompletion(checkResult) {
+                if (learningModule) {
+                    learningModule.stopCapture();
+                }
+                // Explicitly clear video element just in case
+                const vid = document.getElementById('learningVideo');
+                if (vid) {
+                    vid.pause();
+                    vid.srcObject = null;
+                }
+
+                // Update overall progress bar if we advanced
+                if (checkResult.new_overall_progress !== undefined) {
+                    userProgress = checkResult.new_overall_progress;
+                    const newPercent = userProgress * 20;
+                    document.getElementById('overallProgressBar').style.width = `${newPercent}%`;
+                    document.getElementById('overallProgressBar').textContent = `${newPercent}%`;
+                    document.getElementById('overallProgressPercent').textContent = `${newPercent}%`;
+                    document.getElementById('currentPartLabel').textContent = `Current Progress: Part ${userProgress} Completed`;
+
+                    // Update the part selection grid to unlock the next part
+                    updatePartSelectionUI();
+
+                    // Check for Course Completion (Part 5) & Unlock Dynamic Mode
+                    if (userProgress >= 5) {
+                        try {
+                            const unlockResp = await fetch('/dynamic/unlock/alphabets', { method: 'POST' });
+                            if (unlockResp.ok) {
+                                const data = await unlockResp.json();
+                                console.log("Dynamic Unlock:", data);
+                                // Show celebration toast or modify completion view
+                                if (data.unlocked) {
+                                    document.getElementById('completionMessage').innerHTML = `
+                                    <h2>🎉 Course Complete! 🎉</h2>
+                                    <p>You've mastered all the alphabets!</p>
+                                    <div class="alert alert-success mt-3">
+                                        <h4><i class="fa fa-unlock"></i> Dynamic Practice Unlocked!</h4>
+                                        <p>You can now access the adaptive practice mode to master your skills.</p>
+                                    </div>
+                                `;
+                                    document.getElementById('nextPartBtn').textContent = "Go to Dynamic Practice";
+                                    document.getElementById('nextPartBtn').onclick = () => window.location.href = '/coursedynamic/alphabets';
+                                    document.getElementById('nextPartBtn').className = "btn btn-success btn-lg";
+                                }
+                            }
+                        } catch (e) {
+                            console.error("Unlock failed:", e);
+                        }
+                    }
+                }
+
+                document.getElementById('learningView').style.display = 'none';
+                document.getElementById('partCompletionView').style.display = 'block';
+            }
+
+            async function skipCurrentSign() {
+                console.log("Skip button clicked");
+                if (!learningModule) {
+                    console.error("Learning module not initialized");
+                    return;
+                }
+                if (!learningModule.currentSession) {
+                    console.error("No active session");
+                    alert("Please start a part first.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/fsl/sequence/skip', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: learningModule.currentSession })
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            alert("Error: Backend sequence route not found (404). Please RESTART your Python server implementation.");
+                            return;
+                        }
+                        throw new Error(`Server returned ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log("Skip result:", result);
+                    if (result) {
+                        updateLearningUI(result);
+                    }
+                } catch (e) {
+                    console.error("Skip failed:", e);
+                    if (e instanceof SyntaxError) {
+                        alert("Error: Backend returned invalid JSON (likely 404 HTML). Please RESTART your Python backend server to apply recent code changes.");
+                    } else {
+                        alert("Failed to skip sign. See console for details.");
+                    }
+                }
+            }
+
+            function continueToNextPart() {
+                if (currentPartIdx === null) return;
+                const nextPart = currentPartIdx + 1;
+
+                if (nextPart > 5) {
+                    alert("Congratulations! You have completed the entire Alphabet Course.");
+                    window.location.href = '/'; // Or dashboard
+                    return;
+                }
+
+                // Hide completion view
+                document.getElementById('partCompletionView').style.display = 'none';
+
+                // Start next part immediately
+                startLearningPart(nextPart);
+            }
+
+        </script>
+    {% include "gamification_ui.html" %}
+</body>
+
+</html>

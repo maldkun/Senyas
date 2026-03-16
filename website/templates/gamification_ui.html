@@ -1,0 +1,177 @@
+<!-- GAMIFICATION GLOBAL UI -->
+<style>
+/* EXP Toast */
+.gami-exp-toast {
+    position: fixed; top: 24px; right: 24px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.gami-toast-item {
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    color: #fff; border-radius: 12px; padding: 10px 18px;
+    font-weight: 700; font-size: 1rem;
+    box-shadow: 0 4px 20px rgba(30,64,175,0.35);
+    animation: gamiSlideIn 0.35s ease;
+    display: flex; align-items: center; gap: 8px;
+}
+.gami-toast-bonus {
+    font-size: 0.78rem; font-weight: 500; opacity: 0.9;
+    margin-top: 2px;
+}
+@keyframes gamiSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+}
+@keyframes gamiSlideOut {
+    from { transform: translateX(0);   opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+/* Achievement Toast */
+.gami-ach-toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.gami-ach-item {
+    background: #fff; border-left: 5px solid #FFC107;
+    border-radius: 10px; padding: 12px 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+    display: flex; align-items: center; gap: 12px;
+    animation: gamiSlideIn 0.4s ease;
+    min-width: 280px; max-width: 340px;
+}
+.gami-ach-badge { font-size: 2rem; }
+.gami-ach-name  { font-weight: 700; font-size: 0.9rem; }
+.gami-ach-desc  { font-size: 0.78rem; color: #6c757d; }
+.gami-ach-exp   { font-size: 0.78rem; color: #1E40AF; font-weight: 700; }
+/* Level-Up Modal overlay */
+#gamiLevelUpOverlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+}
+#gamiLevelUpOverlay.active { display: flex; }
+.gami-levelup-box {
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    color: #fff; border-radius: 20px; padding: 40px 32px; text-align: center;
+    max-width: 380px; width: 90%;
+    box-shadow: 0 12px 48px rgba(30,64,175,0.45);
+    animation: gamiPop 0.5s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes gamiPop {
+    from { transform: scale(0.6); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+.gami-levelup-title { font-size: 1.8rem; font-weight: 900; letter-spacing:1px; }
+.gami-levelup-nums  { font-size: 3rem;   font-weight: 900; margin: 8px 0; }
+.gami-levelup-sub   { font-size: 1rem; opacity: 0.9; margin-bottom: 16px; }
+.gami-levelup-unlocks li { text-align: left; font-size: 0.9rem; opacity: 0.9; }
+.gami-levelup-btn {
+    margin-top: 20px; background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.6);
+    color: #fff; border-radius: 30px; padding: 10px 36px;
+    font-weight: 700; cursor: pointer; font-size: 1rem;
+}
+.gami-levelup-btn:hover { background: rgba(255,255,255,0.35); }
+</style>
+
+<!-- EXP Toast Container -->
+<div class="gami-exp-toast" id="gamiExpToast"></div>
+<!-- Achievement Toast Container -->
+<div class="gami-ach-toast" id="gamiAchToast"></div>
+<!-- Level-Up Overlay -->
+<div id="gamiLevelUpOverlay">
+    <div class="gami-levelup-box">
+        <div class="gami-levelup-title">✨ LEVEL UP! ✨</div>
+        <div class="gami-levelup-nums" id="gamiLevelNums">1 &rarr; 2</div>
+        <div class="gami-levelup-sub"  id="gamiLevelTitle">Learning Hands</div>
+        <ul class="gami-levelup-unlocks list-unstyled" id="gamiLevelUnlocks"></ul>
+        <div id="gamiMaxMsg" style="display:none;" class="mb-2">
+            🏆 You've reached <strong>MAX LEVEL</strong>!<br>
+            Keep earning EXP to show your mastery!
+        </div>
+        <button class="gami-levelup-btn" onclick="document.getElementById('gamiLevelUpOverlay').classList.remove('active')">
+            Awesome! 🎉
+        </button>
+    </div>
+</div>
+
+<script>
+window.Gami = {
+    /* Show EXP toast (+N EXP + bonuses) */
+    showExpToast(exp, bonuses) {
+        if (!exp || exp <= 0) return;
+        const container = document.getElementById('gamiExpToast');
+        const item = document.createElement('div');
+        item.className = 'gami-toast-item';
+        let html = `<span>⭐</span><div><div>+${exp} EXP</div>`;
+        if (bonuses && bonuses.length) {
+            html += bonuses.map(b => `<div class="gami-toast-bonus">✨ ${b.description}</div>`).join('');
+        }
+        html += '</div>';
+        item.innerHTML = html;
+        container.appendChild(item);
+        setTimeout(() => {
+            item.style.animation = 'gamiSlideOut 0.3s ease forwards';
+            setTimeout(() => item.remove(), 320);
+        }, 3000);
+    },
+
+    /* Show level-up overlay */
+    showLevelUp(levelData) {
+        if (!levelData || levelData.levels_gained <= 0) return;
+        const TITLES = ['','Beginner Signer','Learning Hands','Signing Student','Confident Signer',
+                        'Skilled Hands','Advanced Signer','Expert Hands','Master Signer','FSL Champion','Sign Language Legend'];
+        const UNLOCKS = {2:['Words Course Access'],3:['Statistics Dashboard'],4:['Phrases Course Access'],
+            5:['Custom Avatar Upload'],6:['Theme Customization'],7:['Achievement Showcase'],
+            8:['Leaderboard Access'],9:['Expert Challenges Mode'],10:['Mentor Badge','Certificate of Completion']};
+
+        document.getElementById('gamiLevelNums').innerHTML  = `${levelData.old_level} &rarr; ${levelData.new_level}`;
+        document.getElementById('gamiLevelTitle').textContent = TITLES[levelData.new_level] || '';
+
+        const unlockEl = document.getElementById('gamiLevelUnlocks');
+        const unlocks  = UNLOCKS[levelData.new_level] || [];
+        unlockEl.innerHTML = unlocks.length
+            ? '<div style="font-weight:700;margin-bottom:6px;">🎁 Unlocked:</div>' +
+              unlocks.map(u=>`<li>✅ ${u}</li>`).join('')
+            : '';
+
+        document.getElementById('gamiMaxMsg').style.display = levelData.is_max_level ? 'block' : 'none';
+        document.getElementById('gamiLevelUpOverlay').classList.add('active');
+    },
+
+    /* Show achievement toast notifications sequentially */
+    showAchievements(achievements) {
+        if (!achievements || !achievements.length) return;
+        const container = document.getElementById('gamiAchToast');
+        achievements.forEach((a, i) => {
+            setTimeout(() => {
+                const ach = a.achievement || a;
+                const item = document.createElement('div');
+                item.className = 'gami-ach-item';
+                item.innerHTML = `
+                    <div class="gami-ach-badge">${ach.badge_icon || '🏅'}</div>
+                    <div>
+                        <div class="gami-ach-name">${ach.name}</div>
+                        <div class="gami-ach-desc">${ach.description || ''}</div>
+                        <div class="gami-ach-exp">+${a.exp_rewarded || 0} EXP</div>
+                    </div>`;
+                container.appendChild(item);
+                setTimeout(() => {
+                    item.style.animation = 'gamiSlideOut 0.35s ease forwards';
+                    setTimeout(() => item.remove(), 380);
+                }, 4500);
+            }, i * 600);
+        });
+    },
+
+    /* Handle full gamification response from any API */
+    handleResponse(gamiData) {
+        if (!gamiData) return;
+        const exp = (gamiData.sign_exp || 0) + (gamiData.session_exp || 0) + (gamiData.batch_exp || 0);
+        const bonuses = [...(gamiData.sign_bonuses||[]), ...(gamiData.session_bonuses||[])];
+        if (exp > 0) this.showExpToast(exp, bonuses);
+        if (gamiData.level_data && gamiData.level_data.levels_gained > 0)
+            this.showLevelUp(gamiData.level_data);
+        if (gamiData.new_achievements && gamiData.new_achievements.length)
+            this.showAchievements(gamiData.new_achievements);
+    }
+};
+</script>

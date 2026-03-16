@@ -1,0 +1,11 @@
+{
+  "include": [
+    "."
+  ],
+  "pythonVersion": "3.11",
+  "pythonPath": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "extraPaths": [
+    ".",
+    "Sign Language model"
+  ]
+}
