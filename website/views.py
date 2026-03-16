@@ -350,26 +350,24 @@ def fsl_sequence_start():
             correct_count=0,
             incorrect_count=0,
             final_study_time=0,
-            final_threshold=50
+            final_threshold=50,
+            sequence_data=json.dumps(signs),
+            current_index=0
         )
         db.session.add(session)
         db.session.commit()
 
         session_id = session.id
 
-        sequence = ProgressiveSignSequence()
-        sequence.set_sequence(signs)
-        sequence.db_session_id = session.id
-        fsl_sessions[session_id] = sequence
-
-        progress = sequence.get_progress()
-
+        # Return identical payload as before
+        current_target = signs[0] if signs else None
+        
         return jsonify({
             'session_id': session_id,
-            'sequence': progress['sequence'],
-            'target': progress['current_target'],
-            'completed': progress['completed'],
-            'progress_percent': progress['progress_percent'],
+            'sequence': signs,
+            'target': current_target,
+            'completed': [],
+            'progress_percent': 0,
             'part': part_idx
         }), 200
 
@@ -397,18 +395,20 @@ def fsl_sequence_check():
         print(
             f"👉 CHECK: Session={session_id}, Sign='{detected_sign}', Conf={confidence}")
 
-        if session_id not in fsl_sessions:
-            print(
-                f"❌ Session {session_id} not found in {list(fsl_sessions.keys())}")
+        session = DynamicSession.query.get(session_id)
+        if not session or not session.sequence_data:
+            print(f"❌ Session {session_id} not found in DB")
             return jsonify({'error': 'Session not found. Start a sequence first.'}), 404
 
-        sequence = fsl_sessions[session_id]
-        current_target = sequence.current_target
+        # Reconstruct sequence state
+        sequence_list = json.loads(session.sequence_data)
+        current_index = session.current_index
+        
+        current_target = sequence_list[current_index] if current_index < len(sequence_list) else None
 
         # === EXPLICIT VALIDATION (Ported from Dynamic Mode) ===
         # Simple, direct comparison without hidden state
-        target_str = str(current_target).strip(
-        ).upper() if current_target else ""
+        target_str = str(current_target).strip().upper() if current_target else ""
 
         print(f"👉 TARGET: '{target_str}' vs DETECTED: '{detected_sign}'")
 
@@ -424,12 +424,15 @@ def fsl_sequence_check():
 
         if is_correct:
             print("✅ CORRECT! Advancing...")
-            # Advance sequence manually
-            sequence.advance()
+            # Advance sequence manually in DB
+            session.current_index += 1
+            current_index = session.current_index
+            db.session.commit()
+            
             result['message'] = "Correct!"
 
             # Log the successful attempt exactly once per completed sign
-            db_session_id = getattr(sequence, 'db_session_id', None)
+            db_session_id = session.id
             if db_session_id and current_target:
                 try:
                     attempt = SignAttempt(
@@ -507,10 +510,13 @@ def fsl_sequence_check():
                     print(f"❌ Error saving static attempt: {e}")
 
             # Check for completion of part
-            progress = sequence.get_progress()
+            is_complete = current_index >= len(sequence_list)
+            completed_signs = sequence_list[:current_index]
+            progress_pct = int((current_index / len(sequence_list)) * 100) if sequence_list else 0
+            new_target = sequence_list[current_index] if not is_complete else None
 
             # Mark session complete if done
-            if progress['is_complete'] and db_session_id:
+            if is_complete and db_session_id:
                 try:
                     sess = DynamicSession.query.get(db_session_id)
                     if sess:
@@ -549,11 +555,11 @@ def fsl_sequence_check():
                     db.session.rollback()
 
             result.update({
-                'is_complete': progress['is_complete'],
-                'completed': progress['completed'],
-                'sequence': progress['sequence'],
-                'progress_percent': progress['progress_percent'],
-                'target': progress['current_target']  # Next target
+                'is_complete': is_complete,
+                'completed': completed_signs,
+                'sequence': sequence_list,
+                'progress_percent': progress_pct,
+                'target': new_target  # Next target
             })
 
             # If sequence is complete, update user progress
@@ -568,11 +574,14 @@ def fsl_sequence_check():
                     print(f"Error updating progress: {e}")
         else:
             # Just return current status
-            progress = sequence.get_progress()
+            is_complete = current_index >= len(sequence_list)
+            completed_signs = sequence_list[:current_index]
+            progress_pct = int((current_index / len(sequence_list)) * 100) if sequence_list else 0
+            
             result.update({
-                'is_complete': False,
-                'completed': progress['completed'],
-                'progress_percent': progress['progress_percent'],
+                'is_complete': is_complete,
+                'completed': completed_signs,
+                'progress_percent': progress_pct,
                 'target': current_target
             })
 
@@ -580,7 +589,7 @@ def fsl_sequence_check():
         result['debug_info'] = {
             'detected_clean': detected_sign,
             'target_clean': target_str,
-            'mode': 'DIRECT_VALIDATION'
+            'mode': 'DIRECT_VALIDATION_DB'
         }
 
         return jsonify(result), 200
@@ -603,20 +612,38 @@ def fsl_sequence_skip():
         session_id = data.get('session_id', str(current_user.id))
         print(f"👉 SKIP REQUEST: Session={session_id}")
 
-        if session_id not in fsl_sessions:
+        session = DynamicSession.query.get(session_id)
+        if not session or not session.sequence_data:
             print(f"❌ Session {session_id} not found for skip")
             return jsonify({'error': 'Session not found. Start a sequence first.'}), 404
 
-        sequence = fsl_sessions[session_id]
-        current_target = sequence.current_target
+        sequence_list = json.loads(session.sequence_data)
+        current_target = sequence_list[session.current_index] if session.current_index < len(sequence_list) else None
 
-        result = sequence.skip_current()
+        # Advance it
+        session.current_index += 1
+        db.session.commit()
+        
+        current_index = session.current_index
+        is_complete = current_index >= len(sequence_list)
+        
+        result = {
+            'is_correct': True,
+            'is_complete': is_complete,
+            'message': f'⏹️ Skipped.',
+            'progress_percent': int((current_index / len(sequence_list)) * 100) if sequence_list else 100,
+            'completed': sequence_list[:current_index],
+            'target': sequence_list[current_index] if not is_complete else None,
+            'consecutive_count': 0,
+            'sequence': sequence_list
+        }
+        
         print(f"✅ SKIPPED. Result: {result}")
 
         # Log the skipped attempt
-        db_session_id = getattr(sequence, 'db_session_id', None)
-        target_str = str(current_target).strip(
-        ).upper() if current_target else ""
+        db_session_id = session.id
+        target_str = str(current_target).strip().upper() if current_target else ""
+        
         if db_session_id and target_str:
             try:
                 attempt = SignAttempt(
@@ -632,11 +659,10 @@ def fsl_sequence_skip():
                 )
                 db.session.add(attempt)
 
-                sess = DynamicSession.query.get(db_session_id)
-                if sess:
-                    sess.incorrect_count += 1
-                    if result.get('is_complete'):
-                        sess.completed_at = func.now()
+                if session:
+                    session.incorrect_count += 1
+                    if is_complete:
+                        session.completed_at = func.now()
 
                 # Update UserSignStats for skipped attempt
                 stats = UserSignStats.query.filter_by(
@@ -693,11 +719,21 @@ def fsl_sequence_progress():
     try:
         session_id = request.args.get('session_id', str(current_user.id))
 
-        if session_id not in fsl_sessions:
+        session = DynamicSession.query.get(session_id)
+        if not session or not session.sequence_data:
             return jsonify({'error': 'Session not found'}), 404
 
-        sequence = fsl_sessions[session_id]
-        progress = sequence.get_progress()
+        sequence_list = json.loads(session.sequence_data)
+        current_index = session.current_index
+        is_complete = current_index >= len(sequence_list)
+        
+        progress = {
+            'current_target': sequence_list[current_index] if not is_complete else None,
+            'completed': sequence_list[:current_index],
+            'progress_percent': int((current_index / len(sequence_list)) * 100) if sequence_list else 100,
+            'is_complete': is_complete,
+            'sequence': sequence_list
+        }
 
         return jsonify(progress), 200
 

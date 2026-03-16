@@ -46,6 +46,10 @@ class DynamicSession(db.Model):
     level_after = db.Column(db.Integer, default=1)
     level_ups_occurred = db.Column(db.Integer, default=0)
     
+    # New columns to replace in-memory fsl_sessions
+    sequence_data = db.Column(db.Text, nullable=True)  # JSON string of signs array e.g. '["A","B","C"]'
+    current_index = db.Column(db.Integer, default=0)
+    
     user = db.relationship('User', backref='dynamic_sessions')
 
 
