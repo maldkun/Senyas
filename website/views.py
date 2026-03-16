@@ -22,8 +22,10 @@ try:
     sys.path.insert(0, sign_lang_dir)
     from fsl_inference import get_inference_engine, ProgressiveSignSequence
     print("FSL inference module loaded successfully")
-except ImportError as e:
-    print(f"Warning: FSL inference module not available - {e}")
+except Exception as e:
+    import traceback
+    print(f"FAILED TO LOAD FSL INFERENCE MODULE: {e}")
+    traceback.print_exc()
     get_inference_engine = None
 
 views = Blueprint('views', __name__)
