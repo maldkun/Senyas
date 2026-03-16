@@ -26,11 +26,10 @@ psycopg2-binary==2.9.9
 
 # --- ML / Inference ---
 numpy==1.26.4
-tensorflow==2.14.0
-tensorflow-intel==2.14.0
-keras==2.14.0
-mediapipe==0.10.9
-opencv-python-headless==4.8.0.76
+tensorflow
+keras
+mediapipe
+opencv-python-headless
 Pillow==10.0.0
 
 # --- AI Logic / Stats ---
