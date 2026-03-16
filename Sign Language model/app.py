@@ -66,7 +66,8 @@ try:
     else:
         # Use compile=False and safe_mode=False to handle version incompatibility
         try:
-            model = keras.models.load_model(model_path, compile=False, safe_mode=False)
+            model = keras.models.load_model(
+                model_path, compile=False, safe_mode=False)
             print(f"✅ Model loaded successfully!")
         except Exception as e1:
             print(f"⚠️ First load attempt failed: {e1}")
@@ -89,6 +90,7 @@ except Exception as e:
     traceback.print_exc()
     model = None
     class_names = None
+    print("⚠️ Continuing without model - API will return errors")
 
 
 def allowed_file(filename):
@@ -157,6 +159,9 @@ def predict():
     if not allowed_file(file.filename):
         return jsonify({'error': f'File type not allowed. Allowed: {ALLOWED_EXTENSIONS}'}), 400
 
+    if file.filename is None:
+        return jsonify({'error': 'Invalid file'}), 400
+
     try:
         # Save uploaded file
         filename = secure_filename(file.filename)
@@ -216,8 +221,8 @@ def get_classes():
 @app.route('/info', methods=['GET'])
 def get_info():
     """Get model information"""
-    if model is None:
-        return jsonify({'error': 'Model not loaded'}), 500
+    if model is None or class_names is None:
+        return jsonify({'error': 'Model or classes not loaded'}), 500
 
     return jsonify({
         'model_type': 'CNN',
@@ -233,16 +238,18 @@ def get_info():
 @app.route('/api/fsl/sequence/start', methods=['POST'])
 def start_sequence():
     """Start a new learning sequence"""
-    data = request.json
-    
+    data = request.get_json()
+    if data is None:
+        return jsonify({'error': 'Invalid JSON'}), 400
+
     # Generate session ID if not provided
     session_id = data.get('session_id')
     if not session_id:
         session_id = str(uuid.uuid4())
-    
+
     # Create new sequence
     seq = ProgressiveSignSequence()
-    
+
     # Determine signs to learn
     if 'part' in data:
         part_idx = int(data['part'])
@@ -261,9 +268,9 @@ def start_sequence():
     else:
         # Default fallback
         seq.set_sequence(['A', 'B', 'C'])
-    
+
     active_sequences[session_id] = seq
-    
+
     return jsonify({
         'status': 'started',
         'session_id': session_id,
@@ -276,33 +283,39 @@ def start_sequence():
 @app.route('/api/fsl/sequence/check', methods=['POST'])
 def check_sequence_sign():
     """Check a sign against the current sequence target"""
-    data = request.json
+    data = request.get_json()
+    if data is None:
+        return jsonify({'error': 'Invalid JSON'}), 400
+
     session_id = data.get('session_id')
-    
+
     if not session_id or session_id not in active_sequences:
         # If no session, create a temporary one (graceful degradation)
         # But ideally we want persistent state.
         # For now, return error to force restart
         return jsonify({'error': 'Session not found. Please restart part.'}), 404
-    
+
     seq = active_sequences[session_id]
     result = seq.check_sign(data.get('sign'), data.get('confidence', 0.0))
-    
+
     return jsonify(result)
 
 
 @app.route('/api/fsl/sequence/skip', methods=['POST'])
 def skip_sequence_sign():
     """Skip the current sign in the sequence"""
-    data = request.json
+    data = request.get_json()
+    if data is None:
+        return jsonify({'error': 'Invalid JSON'}), 400
+
     session_id = data.get('session_id')
-    
+
     if not session_id or session_id not in active_sequences:
         return jsonify({'error': 'Session not found'}), 404
-    
+
     seq = active_sequences[session_id]
     result = seq.skip_current()
-    
+
     return jsonify(result)
 
 
@@ -310,10 +323,10 @@ def skip_sequence_sign():
 def get_sequence_progress():
     """Get current progress for a session"""
     session_id = request.args.get('session_id')
-    
+
     if not session_id or session_id not in active_sequences:
         return jsonify({'error': 'Session not found'}), 404
-        
+
     seq = active_sequences[session_id]
     return jsonify(seq.get_progress())
 
