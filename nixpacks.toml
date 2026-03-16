@@ -6,4 +6,4 @@ aptPkgs = ["libgl1-mesa-glx", "libglib2.0-0"]
 cmds = ["pip install -r requirements-prod.txt"]
 
 [start]
-cmd = "gunicorn main:app"
+cmd = "gunicorn main:app --workers 1 --threads 8 --timeout 120"
