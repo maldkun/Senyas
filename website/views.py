@@ -13,21 +13,44 @@ import sys
 import os
 
 # Add parent directory and Sign Language model directory to path for importing FSL modules
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if base_dir not in sys.path:
-    sys.path.insert(0, base_dir)
-sign_lang_dir = os.path.join(base_dir, 'Sign Language model')
-if sign_lang_dir not in sys.path:
-    sys.path.insert(0, sign_lang_dir)
+def robust_fsl_import():
+    """Robustly import FSL modules from multiple possible locations"""
+    import sys
+    import os
+    
+    # Potential paths to search
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    paths_to_try = [
+        base_dir,
+        os.path.join(base_dir, 'Sign Language model'),
+        '/app',
+        '/app/Sign Language model'
+    ]
+    
+    # Try standard import first
+    try:
+        from fsl_inference import get_inference_engine, ProgressiveSignSequence
+        return get_inference_engine, ProgressiveSignSequence
+    except ImportError:
+        pass
 
-try:
-    from fsl_inference import get_inference_engine, ProgressiveSignSequence
-    print("FSL inference module loaded successfully")
-except Exception as e:
-    import traceback
-    print(f"FAILED TO LOAD FSL INFERENCE MODULE: {e}")
-    traceback.print_exc()
-    get_inference_engine = None
+    # Try each path
+    for p in paths_to_try:
+        if os.path.exists(p) and p not in sys.path:
+            sys.path.insert(0, p)
+        try:
+            from fsl_inference import get_inference_engine, ProgressiveSignSequence
+            print(f"✅ Successfully imported FSL inference from: {p}")
+            return get_inference_engine, ProgressiveSignSequence
+        except ImportError:
+            continue
+            
+    return None, None
+
+get_inference_engine, ProgressiveSignSequence = robust_fsl_import()
+
+if get_inference_engine is None:
+    print("❌ FAILED TO LOAD FSL INFERENCE MODULE FROM ALL PATHS")
 
 views = Blueprint('views', __name__)
 
@@ -266,6 +289,35 @@ def coursealphabets():
 # FSL (Filipino Sign Language) Endpoints for Real-time Recognition
 # ============================================================================
 
+@views.route('/api/fsl/debug')
+def fsl_debug():
+    """Diagnostic endpoint to check FSL environment"""
+    import os
+    import sys
+    
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    fsl_path = os.path.join(base_dir, 'Sign Language model')
+    model_dir = os.path.join(fsl_path, 'models')
+    
+    dep_report = {}
+    for mod in ['numpy', 'tensorflow', 'mediapipe', 'cv2']:
+        try:
+            m = __import__(mod)
+            dep_report[mod] = f"OK ({getattr(m, '__version__', 'unknown')})"
+        except Exception as e:
+            dep_report[mod] = f"ERROR: {str(e)}"
+
+    return jsonify({
+        'cwd': os.getcwd(),
+        'base_dir': base_dir,
+        'fsl_dir': fsl_path,
+        'fsl_dir_exists': os.path.exists(fsl_path),
+        'model_dir_exists': os.path.exists(model_dir),
+        'fsl_module_loaded': get_inference_engine is not None,
+        'sys_path': sys.path,
+        'dependencies': dep_report
+    })
+
 @views.route('/api/fsl/predict', methods=['POST'])
 @login_required
 def fsl_predict():
@@ -317,9 +369,13 @@ def fsl_predict():
 
     except Exception as e:
         import traceback
-        print(f"❌ FSL predict error: {e}")
+        err_msg = f"❌ FSL predict error: {str(e)}"
+        print(err_msg)
         print(traceback.format_exc())
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc() if os.environ.get('DEBUG') == 'true' else 'Check logs'
+        }), 500
 
 
 @views.route('/api/fsl/sequence/start', methods=['POST'])

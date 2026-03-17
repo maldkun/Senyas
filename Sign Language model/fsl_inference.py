@@ -6,11 +6,34 @@ Provides functions for real-time sign prediction suitable for web integration.
 import os
 import pickle
 import threading
-import numpy as np
-import mediapipe as mp
-import tensorflow as tf
-from tensorflow import keras
 from collections import defaultdict
+
+# Heavyweight imports moved inside functions to prevent import-time crashes in production
+np = None
+tf = None
+keras = None
+mp = None
+cv2 = None
+
+def _lazy_load_ml():
+    """Lazy load ML weight dependencies without crashing"""
+    global np, tf, keras, mp, cv2
+    try:
+        if np is None:
+            import numpy as np
+        if tf is None:
+            import tensorflow as tf
+            from tensorflow import keras
+        if mp is None:
+            import mediapipe as mp
+        if cv2 is None:
+            try:
+                import cv2
+            except ImportError:
+                cv2 = None
+    except Exception as e:
+        print(f"⚠️ FSL Lazy Load Warning: Some ML components could not be loaded: {e}")
+    return np, tf, keras, mp, cv2
 
 
 # Global MediaPipe instance for reuse
@@ -19,9 +42,9 @@ _hands_manager = None
 def get_hands_detector():
     """Lazy load MediaPipe Hands detector"""
     global _hands_manager
+    _, _, _, mp, _ = _lazy_load_ml()
     if _hands_manager is None:
         try:
-            import mediapipe as mp
             mp_hands = mp.solutions.hands
             _hands_manager = mp_hands.Hands(
                 static_image_mode=False,
@@ -68,6 +91,7 @@ class FSLInferenceEngine:
     
     def load_model(self):
         """Load trained model, classes, and scaler"""
+        np, tf, keras, _, _ = _lazy_load_ml()
         try:
             model_path = os.path.join(self.model_dir, 'fsl_model.h5')
             classes_path = os.path.join(self.model_dir, 'fsl_model_classes.npy')
@@ -112,7 +136,10 @@ class FSLInferenceEngine:
         Returns:
             landmark_vector (63,) or None if no hand detected
         """
+        np, _, _, _, cv2 = _lazy_load_ml()
         try:
+            if cv2 is None:
+                return None
             frame_rgb = cv2.cvtColor(frame_array, cv2.COLOR_BGR2RGB)
             detector = get_hands_detector()
             if not detector:
@@ -163,6 +190,7 @@ class FSLInferenceEngine:
                 'all_scores': dict (if return_all_scores=True)
             }
         """
+        np, _, _, _, _ = _lazy_load_ml()
         if self.model is None or landmarks_vector is None:
             return {
                 'sign': None,
