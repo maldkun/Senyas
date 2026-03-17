@@ -1533,7 +1533,10 @@
                     const response = await fetch('/api/fsl/sequence/skip', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: learningModule.currentSession })
+                        body: JSON.stringify({
+                            session_id: learningModule.currentSession,
+                            part: currentPartIdx
+                        })
                     });
 
                     if (!response.ok) {
@@ -1547,7 +1550,12 @@
                     const result = await response.json();
                     console.log("Skip result:", result);
                     if (result) {
-                        updateLearningUI(result);
+                        // If skipping the last sign completes the part, handle completion
+                        if (result.is_complete) {
+                            handlePartCompletion(result);
+                        } else {
+                            updateLearningUI(result);
+                        }
                     }
                 } catch (e) {
                     console.error("Skip failed:", e);

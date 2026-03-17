@@ -777,6 +777,9 @@ def fsl_sequence_skip():
                     current_user.fsl_progress = part_idx_int
                     db.session.commit()
                     result['new_overall_progress'] = current_user.fsl_progress
+                elif part_idx_int <= current_user.fsl_progress:
+                    # Replaying a completed part - still return current progress
+                    result['new_overall_progress'] = current_user.fsl_progress
             except Exception as e:
                 print(f"Error updating progress on skip: {e}")
 
