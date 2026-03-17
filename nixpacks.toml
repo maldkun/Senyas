@@ -6,4 +6,4 @@ aptPkgs = ["libgl1", "libgl1-mesa-glx", "libgl1-mesa-dev", "libglib2.0-0", "mesa
 cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "gunicorn main:app --workers 1 --threads 8 --timeout 120"
+cmd = "python migrate_ai_mode.py && gunicorn main:app --workers 1 --threads 8 --timeout 120"
