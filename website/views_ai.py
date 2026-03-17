@@ -35,7 +35,8 @@ def get_session_count():
     """
     count = DynamicSession.query.filter_by(
         user_id=current_user.id,
-        course='alphabets_ai'
+        course='alphabets',
+        mode='ai'
     ).filter(DynamicSession.completed_at.isnot(None)).count()
 
     return jsonify({'count': count})
@@ -53,7 +54,7 @@ def start_ai_session():
     # Create a new DynamicSession to track this (reusing the model)
     session = DynamicSession(
         user_id=current_user.id,
-        course='alphabets_ai',  # Distinguish from standard dynamic
+        course='alphabets',  # Standardized
         mode='ai',
         total_signs=len(plan),
         correct_count=0,
@@ -95,7 +96,7 @@ def validate_ai_sign():
         session_id=session_id,
         user_id=current_user.id,
         sign_id=sign_id,
-        course='alphabets_ai',
+        course='alphabets',
         was_correct=is_correct,
         ai_detected_sign=detected_sign,
         ai_confidence=confidence,

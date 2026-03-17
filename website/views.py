@@ -12,14 +12,15 @@ from io import BytesIO
 import sys
 import os
 
-# Add parent directory to path for importing FSL modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Add parent directory and Sign Language model directory to path for importing FSL modules
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if base_dir not in sys.path:
+    sys.path.insert(0, base_dir)
+sign_lang_dir = os.path.join(base_dir, 'Sign Language model')
+if sign_lang_dir not in sys.path:
+    sys.path.insert(0, sign_lang_dir)
 
 try:
-    # Import from the Sign Language model directory
-    sign_lang_dir = os.path.join(os.path.dirname(
-        __file__), '..', 'Sign Language model')
-    sys.path.insert(0, sign_lang_dir)
     from fsl_inference import get_inference_engine, ProgressiveSignSequence
     print("FSL inference module loaded successfully")
 except Exception as e:
@@ -44,6 +45,10 @@ def home():
 @login_required
 def progress():
     course = request.args.get('course', 'alphabets')
+    
+    # Ensure all signs exist in stats for research clarity
+    if course == 'alphabets':
+        gami.ensure_all_stats_exist(current_user.id, course)
 
     # Get user's stats for this course
     stats = UserSignStats.query.filter_by(
@@ -345,7 +350,8 @@ def fsl_sequence_start():
         # Create a new DynamicSession for this static part
         session = DynamicSession(
             user_id=current_user.id,
-            course='static',
+            course='alphabets',
+            mode='static',
             total_signs=len(signs),
             correct_count=0,
             incorrect_count=0,
@@ -439,7 +445,7 @@ def fsl_sequence_check():
                         session_id=db_session_id,
                         user_id=current_user.id,
                         sign_id=target_str,
-                        course='static',
+                        course='alphabets',
                         was_correct=True,
                         ai_detected_sign=detected_sign,
                         ai_confidence=confidence,
@@ -650,7 +656,8 @@ def fsl_sequence_skip():
                     session_id=db_session_id,
                     user_id=current_user.id,
                     sign_id=target_str,
-                    course='static',
+                    course='alphabets',
+            mode='static',
                     was_correct=False,
                     ai_detected_sign='SKIPPED',
                     ai_confidence=0.0,
@@ -885,6 +892,7 @@ def dynamic_session_start():
         session = DynamicSession(
             user_id=current_user.id,
             course=course,
+            mode='dynamic',
             total_signs=15,
             correct_count=0,
             incorrect_count=0,
@@ -987,7 +995,7 @@ def dynamic_session_validate():
             stats = UserSignStats(
                 user_id=current_user.id,
                 sign_id=sign_id,
-                course=course,
+                course='alphabets' if course == 'alphabets' else course,
                 total_attempts=1,
                 correct_count=1 if is_correct else 0,
                 last_practiced_at=func.now()
@@ -1283,9 +1291,13 @@ def dynamic_queue_generate():
                 rate = perf_map[sign]['success_rate']
                 last_practice = perf_map[sign]['last_practiced']
 
+                # Normalize timezone-aware back to naive for comparison with datetime.now()
+                if last_practice and hasattr(last_practice, 'tzinfo') and last_practice.tzinfo:
+                    last_practice = last_practice.replace(tzinfo=None)
+
                 if rate < 60:
                     struggled.append((sign, rate))
-                elif last_practice and isinstance(last_practice, datetime) and last_practice < three_days_ago:
+                elif last_practice and last_practice < three_days_ago:
                     review.append(sign)
 
         # Sort struggled by success rate (worst first)

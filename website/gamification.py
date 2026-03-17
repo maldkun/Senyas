@@ -95,6 +95,41 @@ def get_or_create_user_progress(user_id: int):
         db.session.commit()
     return prog
 
+
+def ensure_all_stats_exist(user_id: int, course: str = 'alphabets'):
+    """
+    Ensure UserSignStats has an entry for every sign in the course.
+    Useful for research exports so the CSV doesn't have missing rows.
+    """
+    from .models import UserSignStats
+    
+    if course == 'alphabets':
+        all_signs = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    else:
+        # For words or phrases, we could add them as they are defined
+        return 
+
+    existing_signs = {s.sign_id for s in UserSignStats.query.filter_by(
+        user_id=user_id, course=course).all()}
+    
+    added = False
+    for sign in all_signs:
+        if sign not in existing_signs:
+            stats = UserSignStats(
+                user_id=user_id,
+                sign_id=sign,
+                course=course,
+                total_attempts=0,
+                correct_count=0,
+                avg_confidence=0.0,
+                last_5_attempts="[]"
+            )
+            db.session.add(stats)
+            added = True
+            
+    if added:
+        db.session.commit()
+
 # ---------------------------------------------------------------------------
 # Core EXP awarding
 # ---------------------------------------------------------------------------
