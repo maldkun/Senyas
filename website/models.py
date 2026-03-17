@@ -9,7 +9,7 @@ class Feedback(db.Model):
     data = db.Column(db.String(10000))
     date = db.Column(db.DateTime(timezone=True), default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref='feedback_list')
+    user = db.relationship('User', back_populates='feedbacks')
 
 
 class User(db.Model, UserMixin):
@@ -24,7 +24,7 @@ class User(db.Model, UserMixin):
     dynamic_words_unlocked = db.Column(db.Boolean, default=False)
     dynamic_phrases_unlocked = db.Column(db.Boolean, default=False)
     
-    feedbacks = db.relationship('Feedback')
+    feedbacks = db.relationship('Feedback', back_populates='user')
 
 
 class DynamicSession(db.Model):

@@ -96,6 +96,14 @@ def progress():
         current_study_time = sessions[0].final_study_time or 5
         current_threshold = sessions[0].final_threshold or 70
 
+    # Safeguard for template sorting (fix groupby error)
+    for session in sessions:
+        for attempt in session.attempts:
+            if attempt.batch_index is None:
+                attempt.batch_index = 0
+            if attempt.performance_order_index is None:
+                attempt.performance_order_index = 0
+
     return render_template(
         "progress.html",
         course=course,
@@ -497,7 +505,11 @@ def fsl_sequence_check():
                         ai_detected_sign=detected_sign,
                         ai_confidence=confidence,
                         validation_threshold=50,
-                        study_time_used=0
+                        study_time_used=0,
+                        batch_index=0,
+                        batch_size=0,
+                        study_order_index=0,
+                        performance_order_index=0
                     )
                     db.session.add(attempt)
 
@@ -615,13 +627,17 @@ def fsl_sequence_check():
                 'target': new_target  # Next target
             })
 
-            # If sequence is complete, update user progress
+            # If sequence is complete, update user progress (only advance by 1 to prevent jumps)
             if result.get('is_complete') and part_idx:
                 try:
                     part_idx_int = int(part_idx)
-                    if part_idx_int > current_user.fsl_progress:
+                    # Only allow advancing to the next part (prevent jumps to 5)
+                    if part_idx_int == current_user.fsl_progress + 1:
                         current_user.fsl_progress = part_idx_int
                         db.session.commit()
+                        result['new_overall_progress'] = current_user.fsl_progress
+                    elif part_idx_int <= current_user.fsl_progress:
+                        # Already completed, send current progress back
                         result['new_overall_progress'] = current_user.fsl_progress
                 except Exception as e:
                     print(f"Error updating progress: {e}")
@@ -681,7 +697,7 @@ def fsl_sequence_skip():
         is_complete = current_index >= len(sequence_list)
         
         result = {
-            'is_correct': True,
+            'is_correct': False,  # Should be False for a skip
             'is_complete': is_complete,
             'message': f'⏹️ Skipped.',
             'progress_percent': int((current_index / len(sequence_list)) * 100) if sequence_list else 100,
@@ -704,12 +720,16 @@ def fsl_sequence_skip():
                     user_id=current_user.id,
                     sign_id=target_str,
                     course='alphabets',
-            mode='static',
+                    mode='static',
                     was_correct=False,
                     ai_detected_sign='SKIPPED',
                     ai_confidence=0.0,
                     validation_threshold=50,
-                    study_time_used=0
+                    study_time_used=0,
+                    batch_index=0,
+                    batch_size=0,
+                    study_order_index=0,
+                    performance_order_index=0
                 )
                 db.session.add(attempt)
 
@@ -742,6 +762,18 @@ def fsl_sequence_skip():
             except Exception as e:
                 db.session.rollback()
                 print(f"❌ Error saving skipped attempt: {e}")
+
+        # Update overall progress if skipping last sign in static mode
+        part_idx_val = data.get('part')
+        if is_complete and part_idx_val:
+            try:
+                part_idx_int = int(part_idx_val)
+                if part_idx_int == current_user.fsl_progress + 1:
+                    current_user.fsl_progress = part_idx_int
+                    db.session.commit()
+                    result['new_overall_progress'] = current_user.fsl_progress
+            except Exception as e:
+                print(f"Error updating progress on skip: {e}")
 
         return jsonify(result), 200
 
