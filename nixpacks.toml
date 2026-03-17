@@ -1,6 +1,6 @@
 [phases.setup]
 nixPkgs = ["python310"]
-aptPkgs = ["libgl1", "libgl1-mesa-glx", "libglib2.0-0", "mesa-utils"]
+aptPkgs = ["libgl1", "libgl1-mesa-glx", "libgl1-mesa-dev", "libglib2.0-0", "mesa-utils", "libsm6", "libxext6", "libxrender1"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]

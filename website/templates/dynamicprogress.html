@@ -60,7 +60,7 @@
                         {% if course == 'alphabets' %}
                         {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
                         {% set stat = stats|selectattr('sign_id', 'equalto', letter)|first %}
-                        {% if stat %}
+                        {% if stat and stat.total_attempts > 0 %}
                         {% set success_rate = (stat.correct_count / stat.total_attempts * 100)|round|int %}
                         {% if success_rate >= 80 %}
                         {% set color = 'success' %}

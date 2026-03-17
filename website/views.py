@@ -12,9 +12,9 @@ from io import BytesIO
 import sys
 import os
 
-# Add parent directory and Sign Language model directory to path for importing FSL modules
-def robust_fsl_import():
-    """Robustly import FSL modules from multiple possible locations"""
+# FSL module loader (true lazy)
+def get_fsl_module():
+    """Import FSL modules only when needed"""
     import sys
     import os
     
@@ -27,30 +27,17 @@ def robust_fsl_import():
         '/app/Sign Language model'
     ]
     
-    # Try standard import first
-    try:
-        from fsl_inference import get_inference_engine, ProgressiveSignSequence
-        return get_inference_engine, ProgressiveSignSequence
-    except ImportError:
-        pass
-
-    # Try each path
+    # Add paths
     for p in paths_to_try:
         if os.path.exists(p) and p not in sys.path:
             sys.path.insert(0, p)
-        try:
-            from fsl_inference import get_inference_engine, ProgressiveSignSequence
-            print(f"✅ Successfully imported FSL inference from: {p}")
-            return get_inference_engine, ProgressiveSignSequence
-        except ImportError:
-            continue
             
-    return None, None
-
-get_inference_engine, ProgressiveSignSequence = robust_fsl_import()
-
-if get_inference_engine is None:
-    print("❌ FAILED TO LOAD FSL INFERENCE MODULE FROM ALL PATHS")
+    try:
+        import fsl_inference
+        return fsl_inference
+    except Exception as e:
+        print(f"❌ CRITICAL FSL IMPORT FAILURE: {e}")
+        return None
 
 views = Blueprint('views', __name__)
 
@@ -337,8 +324,9 @@ def fsl_predict():
         }
     """
     try:
-        if get_inference_engine is None:
-            return jsonify({'error': 'FSL module not available'}), 500
+        fsl = get_fsl_module()
+        if not fsl or not hasattr(fsl, 'get_inference_engine'):
+            return jsonify({'error': 'FSL module not available'}), 503
 
         data = request.get_json()
 
@@ -349,7 +337,7 @@ def fsl_predict():
         session_id = data.get('session_id', str(current_user.id))
         use_smoothing = data.get('smooth', True)
 
-        engine = get_inference_engine()
+        engine = fsl.get_inference_engine()
 
         if use_smoothing:
             result = engine.get_smoothed_prediction(landmarks, session_id)
@@ -815,18 +803,13 @@ def fsl_sequence_progress():
 def fsl_available_signs():
     """
     Get list of available FSL signs the model can recognize
-
-    Returns:
-        {
-            'signs': list of str,
-            'count': int
-        }
     """
     try:
-        if get_inference_engine is None:
-            return jsonify({'error': 'FSL module not available'}), 500
+        fsl = get_fsl_module()
+        if not fsl or not hasattr(fsl, 'get_inference_engine'):
+            return jsonify({'error': 'FSL module not available'}), 503
 
-        engine = get_inference_engine()
+        engine = fsl.get_inference_engine()
         signs = engine.get_available_signs()
 
         if hasattr(signs, 'tolist'):
