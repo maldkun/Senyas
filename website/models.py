@@ -86,23 +86,80 @@ class SignAttempt(db.Model):
 
 
 class UserSignStats(db.Model):
-    """Aggregated performance statistics per sign"""
+    """Aggregated performance statistics per sign, per mode"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    sign_id = db.Column(db.String(50))
-    course = db.Column(db.String(50))
+    sign_id = db.Column(db.String(50))   # 'A', 'B', 'HELLO', etc.
+    course = db.Column(db.String(50))    # 'alphabets', 'words', 'phrases'
+    mode = db.Column(db.String(20), default='static')  # 'static', 'dynamic', 'ai'
+
+    # Core Stats
     total_attempts = db.Column(db.Integer, default=0)
     correct_count = db.Column(db.Integer, default=0)
     last_practiced_at = db.Column(db.DateTime(timezone=True))
-    
-    # AI Mode Specific Stats
+
+    # Confidence Tracking
     avg_confidence = db.Column(db.Float, default=0.0)
-    last_5_attempts = db.Column(db.String(100), default="[]")  # JSON List of booleans e.g. "[true, false, true]"
-    
+    last_5_attempts = db.Column(db.String(200), default="[]")  # JSON list of booleans
+
+    # Performance History — JSON array of recent {date, was_correct, confidence} objects
+    # e.g. '[{"date":"2026-03-18","was_correct":true,"confidence":0.87}]'
+    performance_history = db.Column(db.Text, default="[]")
+
+    # Confidence Patterns — JSON with trend metrics
+    # e.g. '{"avg_last_10":0.75,"trend":"improving","best_confidence":0.92}'
+    confidence_patterns = db.Column(db.Text, default="{}")
+
+    # Study Time Preferences — JSON with timing data
+    # e.g. '{"avg_time_seconds":4.2,"best_success_time":3.1,"total_time_seconds":42}'
+    study_time_prefs = db.Column(db.Text, default="{}")
+
+    # Sign Difficulty Assessment — float 0.0 (easy) to 1.0 (very hard)
+    sign_difficulty = db.Column(db.Float, default=0.5)
+
     user = db.relationship('User', backref='sign_stats')
-    
+
+    # Composite unique constraint on user + sign + course + mode
+    __table_args__ = (db.UniqueConstraint('user_id', 'sign_id', 'course', 'mode', name='_user_sign_course_mode_uc'),)
+
+
+class AISignStats(db.Model):
+    """AI-mode specific performance statistics per sign"""
+    __tablename__ = 'ai_sign_stats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    sign_id = db.Column(db.String(50))        # Individual letter or word
+    course = db.Column(db.String(50))         # 'alphabets_ai', 'words_ai', etc.
+
+    # Core Stats
+    total_attempts = db.Column(db.Integer, default=0)
+    correct_count = db.Column(db.Integer, default=0)
+    last_practiced_at = db.Column(db.DateTime(timezone=True))
+
+    # Confidence Analysis
+    avg_confidence = db.Column(db.Float, default=0.0)
+    last_5_attempts = db.Column(db.String(200), default="[]")  # JSON list of booleans
+
+    # AI-Specific Tracking
+    # Difficulty score (0.0 = easy, 1.0 = very hard) computed by AI mode
+    ai_difficulty_score = db.Column(db.Float, default=0.5)
+
+    # History of AI-set thresholds per session
+    # e.g. '[{"session_id":1,"threshold":65},{"session_id":2,"threshold":70}]'
+    ai_threshold_history = db.Column(db.Text, default="[]")
+
+    # Performance History — JSON array of recent {date, was_correct, confidence, threshold}
+    performance_history = db.Column(db.Text, default="[]")
+
+    # Study time tracking
+    # e.g. '{"avg_time_seconds":4.2,"best_success_time":3.1,"total_time_seconds":42}'
+    study_time_prefs = db.Column(db.Text, default="{}")
+
+    user = db.relationship('User', backref='ai_sign_stats')
+
     # Composite unique constraint
-    __table_args__ = (db.UniqueConstraint('user_id', 'sign_id', 'course', name='_user_sign_course_uc'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'sign_id', 'course', name='_ai_sign_stats_uc'),)
 
 
 # ============================================================================
