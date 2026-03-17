@@ -49,12 +49,17 @@ def migrate():
             print("\n📦 Migrating user_sign_stats table...")
 
             # Check if the conflicting 'mode' column was already added in a previous run
-            if column_exists(conn, 'user_sign_stats', 'mode'):
+            if column_exists(conn, 'user_sign_stats', 'mode') and not column_exists(conn, 'user_sign_stats', 'practice_mode'):
                 print("  ⚠️  Found conflicting 'mode' column. Renaming to 'practice_mode'...")
-                conn.execute(text("ALTER TABLE user_sign_stats RENAME COLUMN mode TO practice_mode"))
-                conn.commit()
-                print("  ✅ Renamed 'mode' to 'practice_mode'.")
-            else:
+                try:
+                    conn.execute(text('ALTER TABLE user_sign_stats RENAME COLUMN "mode" TO practice_mode'))
+                    conn.commit()
+                    print("  ✅ Renamed 'mode' to 'practice_mode'.")
+                except Exception as e:
+                    print(f"  ❌ Failed to rename 'mode': {e}")
+            
+            # Ensure practice_mode exists (either renamed above, or needs creation)
+            if not column_exists(conn, 'user_sign_stats', 'practice_mode'):
                 add_column_if_missing(conn, 'user_sign_stats', 'practice_mode', "VARCHAR(20) DEFAULT 'static'")
 
             # Expand last_5_attempts from 100 to 200 chars — we do this by adding a new
