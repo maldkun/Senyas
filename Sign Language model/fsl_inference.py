@@ -13,14 +13,27 @@ from tensorflow import keras
 from collections import defaultdict
 
 
-# MediaPipe setup
-mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(
-    static_image_mode=False,
-    max_num_hands=1,
-    min_detection_confidence=0.5,  # Lowered for better detection
-    min_tracking_confidence=0.4
-)
+# Global MediaPipe instance for reuse
+_hands_manager = None
+
+def get_hands_detector():
+    """Lazy load MediaPipe Hands detector"""
+    global _hands_manager
+    if _hands_manager is None:
+        try:
+            import mediapipe as mp
+            mp_hands = mp.solutions.hands
+            _hands_manager = mp_hands.Hands(
+                static_image_mode=False,
+                max_num_hands=1,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.4
+            )
+            print("MediaPipe Hands initialized successfully")
+        except Exception as e:
+            print(f"FAILED TO INITIALIZE MEDIAPIPE: {e}")
+            _hands_manager = False
+    return _hands_manager if _hands_manager is not False else None
 
 
 class FSLInferenceEngine:
@@ -101,7 +114,10 @@ class FSLInferenceEngine:
         """
         try:
             frame_rgb = cv2.cvtColor(frame_array, cv2.COLOR_BGR2RGB)
-            results = hands.process(frame_rgb)
+            detector = get_hands_detector()
+            if not detector:
+                return None
+            results = detector.process(frame_rgb)
             
             if results.multi_hand_landmarks and len(results.multi_hand_landmarks) > 0:
                 landmarks = results.multi_hand_landmarks[0]
@@ -155,28 +171,37 @@ class FSLInferenceEngine:
             }
         
         try:
+            # Type safety check
+            if not isinstance(landmarks_vector, np.ndarray):
+                landmarks_vector = np.array(landmarks_vector, dtype=np.float32)
+            
+            # Predict (Recursive safety)
+            if landmarks_vector.shape != (63,):
+                 print(f"Warning: Unexpected landmark shape {landmarks_vector.shape}")
+            
             # Normalize
             if self.scaler:
                 landmarks_normalized = self.scaler.transform([landmarks_vector])
             else:
                 landmarks_normalized = np.array([landmarks_vector])
             
-            # Predict
+            # Predict with thread-safe lock
             with self.lock:
                 predictions = self.model.predict(landmarks_normalized, verbose=0)[0]
-            confidence = np.max(predictions)
-            class_idx = np.argmax(predictions)
+            
+            confidence = float(np.max(predictions))
+            class_idx = int(np.argmax(predictions))
             
             result = {
-                'sign': self.class_names[class_idx] if confidence >= self.confidence_threshold else None,
-                'confidence': float(confidence),
-                'threshold_met': confidence >= self.confidence_threshold,
+                'sign': str(self.class_names[class_idx]) if confidence >= self.confidence_threshold else None,
+                'confidence': confidence,
+                'threshold_met': bool(confidence >= self.confidence_threshold),
                 'all_scores': {}
             }
             
             if return_all_scores:
                 for i, score in enumerate(predictions):
-                    result['all_scores'][self.class_names[i]] = float(score)
+                    result['all_scores'][str(self.class_names[i])] = float(score)
             
             return result
         

@@ -304,13 +304,16 @@ def fsl_predict():
         else:
             result = engine.predict_sign(landmarks)
 
-        # Convert any numpy types to python types for JSON serialization
-        if isinstance(result, dict):
-            for key, value in result.items():
-                if hasattr(value, 'item'):  # numpy types have .item()
-                    result[key] = value.item()
+        def convert_numpy(obj):
+            if isinstance(obj, dict):
+                return {str(k): convert_numpy(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy(i) for i in obj]
+            elif hasattr(obj, 'item'):
+                return obj.item()
+            return obj
 
-        return jsonify(result), 200
+        return jsonify(convert_numpy(result)), 200
 
     except Exception as e:
         import traceback
