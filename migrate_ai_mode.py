@@ -37,6 +37,12 @@ with app.app_context():
             print("      ! Error checking/adding {}.{}: {}".format(table, column_name, e))
 
     add_column_if_missing("user_sign_stats", "practice_mode VARCHAR(20) DEFAULT 'static'", "practice_mode")
+    add_column_if_missing("user_sign_stats", "avg_confidence FLOAT DEFAULT 0.0", "avg_confidence")
+    add_column_if_missing("user_sign_stats", "last_5_attempts TEXT DEFAULT '[]'", "last_5_attempts")
+    add_column_if_missing("user_sign_stats", "performance_history TEXT DEFAULT '[]'", "performance_history")
+    add_column_if_missing("user_sign_stats", "confidence_patterns TEXT DEFAULT '{}'", "confidence_patterns")
+    add_column_if_missing("user_sign_stats", "study_time_prefs TEXT DEFAULT '{}'", "study_time_prefs")
+    add_column_if_missing("user_sign_stats", "sign_difficulty FLOAT DEFAULT 0.5", "sign_difficulty")
 
     db.session.commit()
     print("      OK: Columns updated")
