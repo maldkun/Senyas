@@ -96,13 +96,18 @@ def progress():
         current_study_time = sessions[0].final_study_time or 5
         current_threshold = sessions[0].final_threshold or 70
 
-    # Safeguard for template sorting (fix groupby error)
+    # Safeguard for template sorting and comparisons (fix groupby and NoneType errors)
     for session in sessions:
+        if session.final_study_time is None:
+            session.final_study_time = 5  # Default to 5s if missing
+            
         for attempt in session.attempts:
             if attempt.batch_index is None:
                 attempt.batch_index = 0
             if attempt.performance_order_index is None:
                 attempt.performance_order_index = 0
+            if attempt.study_time_used is None:
+                attempt.study_time_used = 0
 
     return render_template(
         "progress.html",

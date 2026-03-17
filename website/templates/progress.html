@@ -170,7 +170,7 @@
                                                 <i class="fa fa-times ml-1"></i>
                                                 {% endif %}
 
-                                                {% if attempt.study_time_used > session.final_study_time %}
+                                                {% if attempt.study_time_used is not none and session.final_study_time is not none and attempt.study_time_used > session.final_study_time %}
                                                 <span title="Extra Time" class="ml-1">⏱️</span>
                                                 {% endif %}
                                             </span>

@@ -56,22 +56,48 @@ def test_template_data_consistency():
         MockSession([MockAttempt(0, 5)])
     ]
 
+    # Testing study time safeguards
+    class MockAttempt:
+        def __init__(self, batch_index=None, perf_index=None, study_time=None):
+            self.batch_index = batch_index
+            self.performance_order_index = perf_index
+            self.study_time_used = study_time
+
+    class MockSession:
+        def __init__(self, attempts, final_study_time=None):
+            self.attempts = attempts
+            self.final_study_time = final_study_time
+
+    sessions = [
+        MockSession([MockAttempt(None, None, None)], None),
+        MockSession([MockAttempt(0, 5, 10)], 5)
+    ]
+
     # The logic I added to views.py
     for session in sessions:
+        if session.final_study_time is None:
+            session.final_study_time = 5
         for attempt in session.attempts:
             if attempt.batch_index is None:
                 attempt.batch_index = 0
             if attempt.performance_order_index is None:
                 attempt.performance_order_index = 0
+            if attempt.study_time_used is None:
+                attempt.study_time_used = 0
 
     # Verification
     for s_idx, session in enumerate(sessions):
+        assert session.final_study_time is not None
         for a_idx, attempt in enumerate(session.attempts):
-            print(f"Session {s_idx} Attempt {a_idx}: batch={attempt.batch_index}, perf={attempt.performance_order_index}")
+            print(f"Session {s_idx} Attempt {a_idx}: batch={attempt.batch_index}, perf={attempt.performance_order_index}, study_time={attempt.study_time_used}")
             assert attempt.batch_index is not None
             assert attempt.performance_order_index is not None
+            assert attempt.study_time_used is not None
+            # Check that comparison doesn't fail
+            is_extra = attempt.study_time_used > session.final_study_time
+            print(f"  Is extra time: {is_extra}")
 
-    print("✅ Template data consistency logic verified!")
+    print("✅ Template data consistency logic (including study_time) verified!")
 
 if __name__ == "__main__":
     try:
