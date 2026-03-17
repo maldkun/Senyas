@@ -91,7 +91,7 @@ class UserSignStats(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     sign_id = db.Column(db.String(50))   # 'A', 'B', 'HELLO', etc.
     course = db.Column(db.String(50))    # 'alphabets', 'words', 'phrases'
-    mode = db.Column(db.String(20), default='static')  # 'static', 'dynamic', 'ai'
+    practice_mode = db.Column(db.String(20), default='static')  # 'static', 'dynamic', 'ai'
 
     # Core Stats
     total_attempts = db.Column(db.Integer, default=0)
@@ -119,8 +119,8 @@ class UserSignStats(db.Model):
 
     user = db.relationship('User', backref='sign_stats')
 
-    # Composite unique constraint on user + sign + course + mode
-    __table_args__ = (db.UniqueConstraint('user_id', 'sign_id', 'course', 'mode', name='_user_sign_course_mode_uc'),)
+    # Composite unique constraint on user + sign + course + practice_mode
+    __table_args__ = (db.UniqueConstraint('user_id', 'sign_id', 'course', 'practice_mode', name='_user_sign_course_mode_uc'),)
 
 
 class AISignStats(db.Model):

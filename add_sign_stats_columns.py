@@ -48,8 +48,14 @@ def migrate():
         with db.engine.connect() as conn:
             print("\n📦 Migrating user_sign_stats table...")
 
-            # mode column
-            add_column_if_missing(conn, 'user_sign_stats', 'mode', "VARCHAR(20) DEFAULT 'static'")
+            # Check if the conflicting 'mode' column was already added in a previous run
+            if column_exists(conn, 'user_sign_stats', 'mode'):
+                print("  ⚠️  Found conflicting 'mode' column. Renaming to 'practice_mode'...")
+                conn.execute(text("ALTER TABLE user_sign_stats RENAME COLUMN mode TO practice_mode"))
+                conn.commit()
+                print("  ✅ Renamed 'mode' to 'practice_mode'.")
+            else:
+                add_column_if_missing(conn, 'user_sign_stats', 'practice_mode', "VARCHAR(20) DEFAULT 'static'")
 
             # Expand last_5_attempts from 100 to 200 chars — we do this by adding a new
             # column if somehow the old size was capped. (SQLite ignores column size anyway.)
@@ -122,7 +128,7 @@ def migrate():
             try:
                 conn.execute(text(
                     "ALTER TABLE user_sign_stats ADD CONSTRAINT _user_sign_course_mode_uc "
-                    "UNIQUE (user_id, sign_id, course, mode)"
+                    "UNIQUE (user_id, sign_id, course, practice_mode)"
                 ))
                 conn.commit()
                 print("  ✅ Added new constraint _user_sign_course_mode_uc")
